@@ -1,0 +1,60 @@
+import {
+  Award,
+  Bath,
+  BrickWall,
+  Building2,
+  Clock,
+  CookingPot,
+  Droplets,
+  HardHat,
+  Hammer,
+  Heart,
+  House,
+  HousePlus,
+  Leaf,
+  PaintRoller,
+  Ruler,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Sun,
+  Trees,
+  Users,
+  Warehouse,
+  Wrench,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+
+/** Icon keys selectable in the admin panel for services and values. */
+export const ICONS: Record<string, { icon: LucideIcon; label: string }> = {
+  house: { icon: House, label: "House" },
+  hammer: { icon: Hammer, label: "Hammer" },
+  kitchen: { icon: CookingPot, label: "Kitchen" },
+  bath: { icon: Bath, label: "Bathroom" },
+  extension: { icon: HousePlus, label: "Extension" },
+  roof: { icon: Warehouse, label: "Roof" },
+  shield: { icon: ShieldCheck, label: "Shield" },
+  award: { icon: Award, label: "Award" },
+  leaf: { icon: Leaf, label: "Leaf" },
+  users: { icon: Users, label: "Team" },
+  paint: { icon: PaintRoller, label: "Painting" },
+  wrench: { icon: Wrench, label: "Wrench" },
+  electric: { icon: Zap, label: "Electric" },
+  plumbing: { icon: Droplets, label: "Plumbing" },
+  ruler: { icon: Ruler, label: "Design" },
+  hardhat: { icon: HardHat, label: "Hard hat" },
+  brick: { icon: BrickWall, label: "Masonry" },
+  building: { icon: Building2, label: "Building" },
+  sun: { icon: Sun, label: "Solar" },
+  garden: { icon: Trees, label: "Garden" },
+  clock: { icon: Clock, label: "Clock" },
+  heart: { icon: Heart, label: "Heart" },
+  star: { icon: Star, label: "Star" },
+  sparkles: { icon: Sparkles, label: "Sparkles" },
+};
+
+export function ServiceIcon({ name, className = "h-6 w-6" }: { name: string; className?: string }) {
+  const Icon = ICONS[name]?.icon ?? House;
+  return <Icon className={className} />;
+}

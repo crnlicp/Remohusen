@@ -1,0 +1,296 @@
+type Testimonial = 
+ record {
+   active: bool;
+   avatar: opt ImageRef;
+   id: nat;
+   name: text;
+   order: nat;
+   quote: L10n;
+   rating: nat;
+   role: L10n;
+ };
+type TeamMember = 
+ record {
+   name: text;
+   photo: opt ImageRef;
+   role: L10n;
+ };
+type SocialLinks = 
+ record {
+   facebook: text;
+   instagram: text;
+   linkedin: text;
+ };
+type Slide = 
+ record {
+   active: bool;
+   ctaLink: text;
+   ctaText: L10n;
+   id: nat;
+   image: ImageRef;
+   order: nat;
+   subtitle: L10n;
+   title: L10n;
+ };
+type SiteContent = 
+ record {
+   about: AboutPage;
+   contact: ContactInfo;
+   latestNews: vec NewsPost;
+   projects: vec Project;
+   seo: SeoSettings;
+   services: vec Service;
+   settings: Settings;
+   slides: vec Slide;
+   testimonials: vec Testimonial;
+ };
+type Settings = 
+ record {
+   companyName: text;
+   footerText: L10n;
+   orgNumber: text;
+   rotNotice: L10n;
+   socials: SocialLinks;
+   tagline: L10n;
+ };
+type Session = 
+ record {
+   expiresAt: int;
+   username: text;
+ };
+type Service = 
+ record {
+   active: bool;
+   description: L10n;
+   icon: text;
+   id: nat;
+   image: opt ImageRef;
+   order: nat;
+   title: L10n;
+ };
+type SeoSettings = 
+ record {
+   about: PageMeta;
+   allowIndexing: bool;
+   areaServed: text;
+   bingVerification: text;
+   businessType: text;
+   contact: PageMeta;
+   googleVerification: text;
+   home: PageMeta;
+   keywords: L10n;
+   news: PageMeta;
+   ogImage: text;
+   priceRange: text;
+   siteUrl: text;
+ };
+type Result_7 = 
+ variant {
+   err: text;
+   ok: DashboardStats;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: ImageInfo;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: AdminContent;
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: vec ImageInfo;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: vec Message;
+ };
+type Result_2 = 
+ variant {
+   err: text;
+   ok: text;
+ };
+type Result_1 = 
+ variant {
+   err: text;
+   ok;
+ };
+type Result = 
+ variant {
+   err: text;
+   ok: nat;
+ };
+type Project = 
+ record {
+   category: L10n;
+   description: L10n;
+   featured: bool;
+   id: nat;
+   images: vec ImageRef;
+   location: text;
+   order: nat;
+   title: L10n;
+   year: text;
+ };
+type PageMeta = 
+ record {
+   description: L10n;
+   title: L10n;
+ };
+type NewsPost = 
+ record {
+   body: L10n;
+   cover: opt ImageRef;
+   createdAt: int;
+   excerpt: L10n;
+   id: nat;
+   published: bool;
+   publishedAt: int;
+   title: L10n;
+   updatedAt: int;
+ };
+type MessageInput = 
+ record {
+   body: text;
+   email: text;
+   name: text;
+   phone: text;
+   subject: text;
+ };
+type Message = 
+ record {
+   body: text;
+   createdAt: int;
+   email: text;
+   id: nat;
+   name: text;
+   phone: text;
+   read: bool;
+   subject: text;
+ };
+type L10n = 
+ record {
+   en: text;
+   sv: text;
+ };
+type ImageRef = 
+ variant {
+   stored: nat;
+   url: text;
+ };
+type ImageInfo = 
+ record {
+   chunkCount: nat;
+   createdAt: int;
+   id: nat;
+   mime: text;
+   name: text;
+   size: nat;
+ };
+type DashboardStats = 
+ record {
+   images: nat;
+   messages: nat;
+   news: nat;
+   projects: nat;
+   publishedNews: nat;
+   services: nat;
+   slides: nat;
+   testimonials: nat;
+   unreadMessages: nat;
+ };
+type ContactInfo = 
+ record {
+   address: text;
+   city: text;
+   email: text;
+   heroImage: opt ImageRef;
+   intro: L10n;
+   mapLat: text;
+   mapLng: text;
+   openingHours: L10n;
+   phone: text;
+   postalCode: text;
+   title: L10n;
+ };
+type AdminContent = 
+ record {
+   about: AboutPage;
+   contact: ContactInfo;
+   news: vec NewsPost;
+   projects: vec Project;
+   seo: SeoSettings;
+   services: vec Service;
+   settings: Settings;
+   slides: vec Slide;
+   testimonials: vec Testimonial;
+ };
+type AboutValue = 
+ record {
+   icon: text;
+   "text": L10n;
+   title: L10n;
+ };
+type AboutStat = 
+ record {
+   caption: L10n;
+   value: text;
+ };
+type AboutPage = 
+ record {
+   heroImage: opt ImageRef;
+   heroText: L10n;
+   heroTitle: L10n;
+   stats: vec AboutStat;
+   storyImage: opt ImageRef;
+   storyText: L10n;
+   storyTitle: L10n;
+   team: vec TeamMember;
+   values: vec AboutValue;
+ };
+service : {
+  adminBeginUpload: (token: text, name: text, mime: text, size: nat) ->
+   (Result);
+  adminDashboard: (token: text) -> (Result_7) query;
+  adminDeleteImage: (token: text, id: nat) -> (Result_1);
+  adminDeleteMessage: (token: text, id: nat) -> (Result_1);
+  adminDeleteNews: (token: text, id: nat) -> (Result_1);
+  adminDeleteProject: (token: text, id: nat) -> (Result_1);
+  adminDeleteService: (token: text, id: nat) -> (Result_1);
+  adminDeleteSlide: (token: text, id: nat) -> (Result_1);
+  adminDeleteTestimonial: (token: text, id: nat) -> (Result_1);
+  adminFinishUpload: (token: text, uploadId: nat) -> (Result_6);
+  adminGetContent: (token: text) -> (Result_5) query;
+  adminListImages: (token: text) -> (Result_4) query;
+  adminListMessages: (token: text) -> (Result_3) query;
+  adminSaveAbout: (token: text, about: AboutPage) -> (Result_1);
+  adminSaveContact: (token: text, contact: ContactInfo) -> (Result_1);
+  adminSaveNews: (token: text, post: NewsPost) -> (Result);
+  adminSaveProject: (token: text, project: Project) -> (Result);
+  adminSaveSeo: (token: text, seo: SeoSettings) -> (Result_1);
+  adminSaveService: (token: text, "service": Service) -> (Result);
+  adminSaveSettings: (token: text, settings: Settings) -> (Result_1);
+  adminSaveSlide: (token: text, slide: Slide) -> (Result);
+  adminSaveTestimonial: (token: text, testimonial: Testimonial) -> (Result);
+  adminSetMessageRead: (token: text, id: nat, read: bool) -> (Result_1);
+  adminUploadChunk: (token: text, uploadId: nat, index: nat, data: blob) ->
+   (Result_1);
+  bootstrapAdmin: (username: text, password: text) -> (Result_1);
+  changePassword: (token: text, currentPassword: text, newPassword: text) ->
+   (Result_1);
+  getImageChunk: (id: nat, index: nat) -> (opt blob) query;
+  getImageInfo: (id: nat) -> (opt ImageInfo) query;
+  getNewsPost: (id: nat) -> (opt NewsPost) query;
+  getSiteContent: () -> (SiteContent) query;
+  isAdminConfigured: () -> (bool) query;
+  listNews: () -> (vec NewsPost) query;
+  login: (username: text, password: text) -> (Result_2);
+  logout: (token: text) -> ();
+  resetAdminCredentials: (username: text, password: text) -> (Result_1);
+  sessionInfo: (token: text) -> (opt Session) query;
+  submitMessage: (input: MessageInput) -> (Result);
+}

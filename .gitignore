@@ -1,0 +1,19 @@
+.vscode/
+.idea/
+**/*~
+.DS_Store
+**/.DS_Store
+.env
+
+# icp-cli local cache (safe to delete). Do NOT ignore .icp/data/
+.icp/cache/
+
+# motoko
+.mops
+*.wasm
+
+# frontend
+node_modules
+frontend/dist
+frontend/src/bindings/
+*.log
