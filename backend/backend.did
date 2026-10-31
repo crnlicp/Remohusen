@@ -44,6 +44,15 @@ type SiteContent =
    slides: vec Slide;
    testimonials: vec Testimonial;
  };
+type SharedDocumentInfo =
+ record {
+   chunks: nat;
+   expiresAt: int;
+   hash: text;
+   language: text;
+   number: text;
+   title: text;
+ };
 type Settings = 
  record {
    companyName: text;
@@ -84,35 +93,71 @@ type SeoSettings =
    priceRange: text;
    siteUrl: text;
  };
-type Result_7 = 
+type Result_9 =
  variant {
    err: text;
-   ok: DashboardStats;
+   ok: record {
+         items: vec DocumentSummary;
+         nextOffset: opt nat;
+       };
  };
-type Result_6 = 
- variant {
-   err: text;
-   ok: ImageInfo;
- };
-type Result_5 = 
- variant {
-   err: text;
-   ok: AdminContent;
- };
-type Result_4 = 
+type Result_8 =
  variant {
    err: text;
    ok: vec ImageInfo;
  };
-type Result_3 = 
+type Result_7 = 
  variant {
    err: text;
    ok: vec Message;
+ };
+type Result_6 = 
+ variant {
+   err: text;
+   ok: BusinessDocument;
+ };
+type Result_5 = 
+ variant {
+   err: text;
+   ok: record {
+         expiresAt: int;
+         token: text;
+       };
+ };
+type Result_4 = 
+ variant {
+   err: text;
+   ok: SharedDocumentInfo;
+ };
+type Result_3 = 
+ variant {
+   err: text;
+   ok: blob;
  };
 type Result_2 = 
  variant {
    err: text;
    ok: text;
+ };
+type Result_13 =
+ variant {
+   err: text;
+   ok: DashboardStats;
+ };
+type Result_12 =
+ variant {
+   err: text;
+   ok: ImageInfo;
+ };
+type Result_11 =
+ variant {
+   err: text;
+   ok: AdminContent;
+ };
+type Result_10 =
+ variant {
+   err: text;
+   ok: opt DocumentSettings;
  };
 type Result_1 = 
  variant {
@@ -191,6 +236,103 @@ type ImageInfo =
    name: text;
    size: nat;
  };
+type DocumentTotals =
+ record {
+   grossOre: nat;
+   netOre: nat;
+   payableOre: nat;
+   vatOre: nat;
+ };
+type DocumentSummary =
+ record {
+   archived: bool;
+   customerName: text;
+   id: nat;
+   issueDate: text;
+   issued: bool;
+   kind: text;
+   number: text;
+   pdfReady: bool;
+   title: text;
+ };
+type DocumentSettings =
+ record {
+   accountingMethod: text;
+   archiveService: text;
+   brand: DocumentBrand;
+   employees: text;
+   financialYearEnd: text;
+   invoicePrefix: text;
+   partnerType: text;
+   paymentDays: nat;
+   privacyApproved: bool;
+   vatPeriod: text;
+   vatRegistered: text;
+ };
+type DocumentPayment =
+ record {
+   amountOre: nat;
+   date: text;
+   reference: text;
+ };
+type DocumentLine =
+ record {
+   category: text;
+   description: text;
+   discountBps: nat;
+   exemptionReason: text;
+   quantityMilli: nat;
+   treatment: text;
+   unitOre: nat;
+   vatBps: nat;
+ };
+type DocumentInput =
+ record {
+   customerAddress: text;
+   customerName: text;
+   customerType: text;
+   customerVat: text;
+   dueDate: text;
+   internalNotes: text;
+   issueDate: text;
+   kind: text;
+   language: text;
+   lines: vec DocumentLine;
+   notes: text;
+   project: text;
+   reverseChargeConfirmed: bool;
+   rotConfirmed: bool;
+   rotOre: nat;
+   sourceId: opt nat;
+   supplyDate: text;
+   terms: text;
+   title: text;
+ };
+type DocumentEvidence =
+ record {
+   acceptanceReference: text;
+   archiveReference: text;
+   einvoiceReference: text;
+ };
+type DocumentEvent =
+ record {
+   action: text;
+   at: int;
+   detail: text;
+ };
+type DocumentBrand =
+ record {
+   address: text;
+   contact: text;
+   fTax: bool;
+   footer: L10n;
+   header: L10n;
+   legalName: text;
+   logoData: text;
+   orgNumber: text;
+   paymentDetails: text;
+   vatNumber: text;
+ };
 type DashboardStats = 
  record {
    images: nat;
@@ -216,6 +358,25 @@ type ContactInfo =
    phone: text;
    postalCode: text;
    title: L10n;
+ };
+type BusinessDocument =
+ record {
+   brand: DocumentBrand;
+   createdAt: int;
+   events: vec DocumentEvent;
+   evidence: DocumentEvidence;
+   id: nat;
+   input: DocumentInput;
+   issuedAt: opt int;
+   number: text;
+   payments: vec DocumentPayment;
+   pdfChunks: nat;
+   pdfHash: text;
+   pdfReady: bool;
+   revision: nat;
+   shareHash: opt text;
+   sourceNumber: text;
+   totals: DocumentTotals;
  };
 type AdminContent = 
  record {
@@ -255,7 +416,8 @@ type AboutPage =
 service : {
   adminBeginUpload: (token: text, name: text, mime: text, size: nat) ->
    (Result);
-  adminDashboard: (token: text) -> (Result_7) query;
+  adminDashboard: (token: text) -> (Result_13) query;
+  adminDeleteDocumentDraft: (token: text, id: nat) -> (Result_1);
   adminDeleteImage: (token: text, id: nat) -> (Result_1);
   adminDeleteMessage: (token: text, id: nat) -> (Result_1);
   adminDeleteNews: (token: text, id: nat) -> (Result_1);
@@ -263,12 +425,30 @@ service : {
   adminDeleteService: (token: text, id: nat) -> (Result_1);
   adminDeleteSlide: (token: text, id: nat) -> (Result_1);
   adminDeleteTestimonial: (token: text, id: nat) -> (Result_1);
-  adminFinishUpload: (token: text, uploadId: nat) -> (Result_6);
-  adminGetContent: (token: text) -> (Result_5) query;
-  adminListImages: (token: text) -> (Result_4) query;
-  adminListMessages: (token: text) -> (Result_3) query;
+  adminDocumentPdfChunk: (token: text, id: nat, index: nat) ->
+   (Result_3) query;
+  adminFinaliseDocumentPdf: (token: text, id: nat, expectedHash: text) ->
+   (Result_6);
+  adminFinishUpload: (token: text, uploadId: nat) -> (Result_12);
+  adminGetContent: (token: text) -> (Result_11) query;
+  adminGetDocument: (token: text, id: nat) -> (Result_6) query;
+  adminGetDocumentSettings: (token: text) -> (Result_10) query;
+  adminIssueDocument: (token: text, id: nat, revision: nat) -> (Result_6);
+  adminListDocuments: (token: text, offset: nat) -> (Result_9) query;
+  adminListImages: (token: text) -> (Result_8) query;
+  adminListMessages: (token: text) -> (Result_7) query;
+  adminRecordDocumentPayment: (token: text, id: nat, payment:
+   DocumentPayment) -> (Result_1);
+  adminResetDocumentPdf: (token: text, id: nat) -> (Result_1);
+  adminRevokeDocumentShare: (token: text, id: nat) -> (Result_1);
   adminSaveAbout: (token: text, about: AboutPage) -> (Result_1);
   adminSaveContact: (token: text, contact: ContactInfo) -> (Result_1);
+  adminSaveDocument: (token: text, id: nat, revision: nat, input:
+   DocumentInput) -> (Result_6);
+  adminSaveDocumentEvidence: (token: text, id: nat, evidence:
+   DocumentEvidence) -> (Result_1);
+  adminSaveDocumentSettings: (token: text, settings: DocumentSettings) ->
+   (Result_1);
   adminSaveNews: (token: text, post: NewsPost) -> (Result);
   adminSaveProject: (token: text, project: Project) -> (Result);
   adminSaveSeo: (token: text, seo: SeoSettings) -> (Result_1);
@@ -277,7 +457,10 @@ service : {
   adminSaveSlide: (token: text, slide: Slide) -> (Result);
   adminSaveTestimonial: (token: text, testimonial: Testimonial) -> (Result);
   adminSetMessageRead: (token: text, id: nat, read: bool) -> (Result_1);
+  adminShareDocument: (token: text, id: nat) -> (Result_5);
   adminUploadChunk: (token: text, uploadId: nat, index: nat, data: blob) ->
+   (Result_1);
+  adminUploadDocumentPdf: (token: text, id: nat, index: nat, chunk: blob) ->
    (Result_1);
   bootstrapAdmin: (username: text, password: text) -> (Result_1);
   changePassword: (token: text, currentPassword: text, newPassword: text) ->
@@ -285,6 +468,8 @@ service : {
   getImageChunk: (id: nat, index: nat) -> (opt blob) query;
   getImageInfo: (id: nat) -> (opt ImageInfo) query;
   getNewsPost: (id: nat) -> (opt NewsPost) query;
+  getSharedDocument: (token: text) -> (Result_4) query;
+  getSharedDocumentPdfChunk: (token: text, index: nat) -> (Result_3) query;
   getSiteContent: () -> (SiteContent) query;
   isAdminConfigured: () -> (bool) query;
   listNews: () -> (vec NewsPost) query;

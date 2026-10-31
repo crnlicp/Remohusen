@@ -3,12 +3,17 @@ import { AdminNotFound, AdminRoot } from "./AdminLayout";
 import { NewsPage, ProjectsPage, ServicesPage, SlidesPage, TestimonialsPage } from "./pages/Collections";
 import { AboutEditorPage, ContactEditorPage, SettingsEditorPage } from "./pages/Editors";
 import { AccountPage, DashboardPage, ImagesPage, MessagesPage } from "./pages/Misc";
+import { lazy, Suspense } from "react";
+import { Spinner } from "../components/Layout";
+
+const DocumentsPage = lazy(() => import("./pages/Documents"));
 
 export default function AdminApp() {
   return (
     <Routes>
       <Route element={<AdminRoot />}>
         <Route index element={<DashboardPage />} />
+        <Route path="documents" element={<Suspense fallback={<Spinner />}><DocumentsPage /></Suspense>} />
         <Route path="messages" element={<MessagesPage />} />
         <Route path="slides" element={<SlidesPage />} />
         <Route path="services" element={<ServicesPage />} />

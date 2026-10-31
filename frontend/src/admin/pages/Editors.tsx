@@ -1,3 +1,4 @@
+import { useAdminLanguage } from "../language";
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { backend, emptyL10n, unwrap, urlRef, type AboutPage, type ContactInfo, type PageMeta, type SeoSettings, type Settings, type TeamMember } from "../../lib/api";
@@ -11,6 +12,7 @@ type Res = { __kind__: "ok"; ok: null } | { __kind__: "err"; err: string };
 
 /** Local draft of a single document with save + dirty tracking. */
 function useDraft<T>(source: T | undefined, save: (token: string, value: T) => Promise<Res>, label: string) {
+  const { t: adminText } = useAdminLanguage();
   const { call, reloadContent } = useAdmin();
   const toast = useToast();
   const [draft, setDraft] = useState<T | undefined>(source && structuredClone(source));
@@ -33,7 +35,7 @@ function useDraft<T>(source: T | undefined, save: (token: string, value: T) => P
       await call(async (t) => unwrap(await save(t, draft)));
       setDirty(false);
       await reloadContent();
-      toast.ok(`${label} saved`);
+      toast.ok(adminText("{0} saved", { "0": label }));
     } catch (e) {
       toast.err(e);
     } finally {
@@ -58,6 +60,7 @@ function ListEditor<T>({
   render: (item: T, set: (v: T) => void) => React.ReactNode;
   addLabel: string;
 }) {
+  const { t: adminText } = useAdminLanguage();
   const move = (i: number, d: number) => {
     const next = [...items];
     const [x] = next.splice(i, 1);
@@ -71,13 +74,13 @@ function ListEditor<T>({
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500">#{i + 1}</span>
             <div className="flex gap-1">
-              <button type="button" className="rounded-md p-1.5 hover:bg-white/10 disabled:opacity-30" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">
+              <button type="button" className="rounded-md p-1.5 hover:bg-white/10 disabled:opacity-30" disabled={i === 0} onClick={() => move(i, -1)} aria-label={adminText("Move up")}>
                 <ArrowUp className="h-4 w-4" />
               </button>
-              <button type="button" className="rounded-md p-1.5 hover:bg-white/10 disabled:opacity-30" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label="Move down">
+              <button type="button" className="rounded-md p-1.5 hover:bg-white/10 disabled:opacity-30" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label={adminText("Move down")}>
                 <ArrowDown className="h-4 w-4" />
               </button>
-              <button type="button" className="rounded-md p-1.5 text-red-300 hover:bg-red-500/20" onClick={() => onChange(items.filter((_, j) => j !== i))} aria-label="Remove">
+              <button type="button" className="rounded-md p-1.5 text-red-300 hover:bg-red-500/20" onClick={() => onChange(items.filter((_, j) => j !== i))} aria-label={adminText("Remove")}>
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -93,118 +96,120 @@ function ListEditor<T>({
 }
 
 export function AboutEditorPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
-  const { draft: a, update, onSave, busy, dirty } = useDraft<AboutPage>(content?.about, (t, v) => backend.adminSaveAbout(t, v), "About page");
+  const { draft: a, update, onSave, busy, dirty } = useDraft<AboutPage>(content?.about, (t, v) => backend.adminSaveAbout(t, v), adminText("About page"));
   if (!a) return <Spinner />;
   return (
     <>
-      <PageHeader title="About us" description="Content of the About us page. Stats are also shown on the home page." />
+      <PageHeader title={adminText("About us")} description={adminText("Content of the About us page. Stats are also shown on the home page.")} />
       <div className="space-y-6">
-        <Card title="Hero">
+        <Card title={adminText("Hero")}>
           <div className="space-y-5">
-            <L10nInput label="Heading" required value={a.heroTitle} onChange={(heroTitle) => update({ ...a, heroTitle })} />
-            <L10nInput label="Intro text" multiline value={a.heroText} onChange={(heroText) => update({ ...a, heroText })} />
-            <ImageInput label="Hero background image" value={a.heroImage} onChange={(heroImage) => update({ ...a, heroImage })} />
+            <L10nInput label={adminText("Heading")} required value={a.heroTitle} onChange={(heroTitle) => update({ ...a, heroTitle })} />
+            <L10nInput label={adminText("Intro text")} multiline value={a.heroText} onChange={(heroText) => update({ ...a, heroText })} />
+            <ImageInput label={adminText("Hero background image")} value={a.heroImage} onChange={(heroImage) => update({ ...a, heroImage })} />
           </div>
         </Card>
-        <Card title="Our story">
+        <Card title={adminText("Our story")}>
           <div className="space-y-5">
-            <L10nInput label="Title" value={a.storyTitle} onChange={(storyTitle) => update({ ...a, storyTitle })} />
-            <L10nInput label="Text" multiline rows={8} value={a.storyText} onChange={(storyText) => update({ ...a, storyText })} />
-            <ImageInput label="Story image" aspect="aspect-[4/3]" value={a.storyImage} onChange={(storyImage) => update({ ...a, storyImage })} />
+            <L10nInput label={adminText("Title")} value={a.storyTitle} onChange={(storyTitle) => update({ ...a, storyTitle })} />
+            <L10nInput label={adminText("Text")} multiline rows={8} value={a.storyText} onChange={(storyText) => update({ ...a, storyText })} />
+            <ImageInput label={adminText("Story image")} aspect="aspect-[4/3]" value={a.storyImage} onChange={(storyImage) => update({ ...a, storyImage })} />
           </div>
         </Card>
-        <Card title="Key figures">
+        <Card title={adminText("Key figures")}>
           <ListEditor
             items={a.stats}
             onChange={(stats) => update({ ...a, stats })}
             create={() => ({ value: "", caption: emptyL10n() })}
-            addLabel="Add figure"
+            addLabel={adminText("Add figure")}
             render={(s, set) => (
               <>
-                <TextInput label="Value" placeholder="e.g. 400+" value={s.value} onChange={(value) => set({ ...s, value })} />
-                <L10nInput label="Caption" value={s.caption} onChange={(caption) => set({ ...s, caption })} />
+                <TextInput label={adminText("Value")} placeholder="e.g. 400+" value={s.value} onChange={(value) => set({ ...s, value })} />
+                <L10nInput label={adminText("Caption")} value={s.caption} onChange={(caption) => set({ ...s, caption })} />
               </>
             )}
           />
         </Card>
-        <Card title="Values">
+        <Card title={adminText("Values")}>
           <ListEditor
             items={a.values}
             onChange={(values) => update({ ...a, values })}
             create={() => ({ icon: "shield", title: emptyL10n(), text: emptyL10n() })}
-            addLabel="Add value"
+            addLabel={adminText("Add value")}
             render={(v, set) => (
               <>
                 <IconSelect value={v.icon} onChange={(icon) => set({ ...v, icon })} />
-                <L10nInput label="Title" value={v.title} onChange={(title) => set({ ...v, title })} />
-                <L10nInput label="Text" multiline rows={2} value={v.text} onChange={(text) => set({ ...v, text })} />
+                <L10nInput label={adminText("Title")} value={v.title} onChange={(title) => set({ ...v, title })} />
+                <L10nInput label={adminText("Text")} multiline rows={2} value={v.text} onChange={(text) => set({ ...v, text })} />
               </>
             )}
           />
         </Card>
-        <Card title="Team">
+        <Card title={adminText("Team")}>
           <ListEditor
             items={a.team}
             onChange={(team) => update({ ...a, team })}
             create={(): TeamMember => ({ name: "", role: emptyL10n() })}
-            addLabel="Add team member"
+            addLabel={adminText("Add team member")}
             render={(m, set) => (
               <>
-                <TextInput label="Name" value={m.name} onChange={(name) => set({ ...m, name })} />
-                <L10nInput label="Role" value={m.role} onChange={(role) => set({ ...m, role })} />
-                <ImageInput label="Photo" aspect="aspect-[4/5] max-w-48" value={m.photo} onChange={(photo) => set({ ...m, photo })} />
+                <TextInput label={adminText("Name")} value={m.name} onChange={(name) => set({ ...m, name })} />
+                <L10nInput label={adminText("Role")} value={m.role} onChange={(role) => set({ ...m, role })} />
+                <ImageInput label={adminText("Photo")} aspect="aspect-[4/5] max-w-48" value={m.photo} onChange={(photo) => set({ ...m, photo })} />
               </>
             )}
           />
         </Card>
       </div>
       <SaveBar busy={busy} dirty={dirty} onSave={() => void onSave()}>
-        {dirty && <span className="mr-auto pl-2 text-sm text-brand-300">Unsaved changes</span>}
+        {dirty && <span className="mr-auto pl-2 text-sm text-brand-300">{adminText("Unsaved changes")}</span>}
       </SaveBar>
     </>
   );
 }
 
 export function ContactEditorPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
-  const { draft: c, update, onSave, busy, dirty } = useDraft<ContactInfo>(content?.contact, (t, v) => backend.adminSaveContact(t, v), "Contact page");
+  const { draft: c, update, onSave, busy, dirty } = useDraft<ContactInfo>(content?.contact, (t, v) => backend.adminSaveContact(t, v), adminText("Contact page"));
   if (!c) return <Spinner />;
   return (
     <>
-      <PageHeader title="Contact us" description="Contact details are shown on the Contact page, in the footer and in the header." />
+      <PageHeader title={adminText("Contact us")} description={adminText("Contact details are shown on the Contact page, in the footer and in the header.")} />
       <div className="space-y-6">
-        <Card title="Page">
+        <Card title={adminText("Page")}>
           <div className="space-y-5">
-            <L10nInput label="Heading" required value={c.title} onChange={(title) => update({ ...c, title })} />
-            <L10nInput label="Intro text" multiline value={c.intro} onChange={(intro) => update({ ...c, intro })} />
-            <ImageInput label="Hero background image" value={c.heroImage} onChange={(heroImage) => update({ ...c, heroImage })} />
+            <L10nInput label={adminText("Heading")} required value={c.title} onChange={(title) => update({ ...c, title })} />
+            <L10nInput label={adminText("Intro text")} multiline value={c.intro} onChange={(intro) => update({ ...c, intro })} />
+            <ImageInput label={adminText("Hero background image")} value={c.heroImage} onChange={(heroImage) => update({ ...c, heroImage })} />
           </div>
         </Card>
-        <Card title="Contact details">
+        <Card title={adminText("Contact details")}>
           <div className="grid gap-5 sm:grid-cols-2">
-            <TextInput label="Phone" value={c.phone} onChange={(phone) => update({ ...c, phone })} />
-            <TextInput label="Email" type="email" value={c.email} onChange={(email) => update({ ...c, email })} />
-            <TextInput label="Street address" value={c.address} onChange={(address) => update({ ...c, address })} />
+            <TextInput label={adminText("Phone")} value={c.phone} onChange={(phone) => update({ ...c, phone })} />
+            <TextInput label={adminText("Email")} type="email" value={c.email} onChange={(email) => update({ ...c, email })} />
+            <TextInput label={adminText("Street address")} value={c.address} onChange={(address) => update({ ...c, address })} />
             <div className="grid grid-cols-2 gap-3">
-              <TextInput label="Postal code" value={c.postalCode} onChange={(postalCode) => update({ ...c, postalCode })} />
-              <TextInput label="City" value={c.city} onChange={(city) => update({ ...c, city })} />
+              <TextInput label={adminText("Postal code")} value={c.postalCode} onChange={(postalCode) => update({ ...c, postalCode })} />
+              <TextInput label={adminText("City")} value={c.city} onChange={(city) => update({ ...c, city })} />
             </div>
           </div>
           <div className="mt-5">
-            <L10nInput label="Opening hours" value={c.openingHours} onChange={(openingHours) => update({ ...c, openingHours })} />
+            <L10nInput label={adminText("Opening hours")} value={c.openingHours} onChange={(openingHours) => update({ ...c, openingHours })} />
           </div>
         </Card>
-        <Card title="Map location">
+        <Card title={adminText("Map location")}>
           <div className="grid gap-5 sm:grid-cols-2">
-            <TextInput label="Latitude" placeholder="59.3293" value={c.mapLat} onChange={(mapLat) => update({ ...c, mapLat })} />
-            <TextInput label="Longitude" placeholder="18.0686" value={c.mapLng} onChange={(mapLng) => update({ ...c, mapLng })} />
+            <TextInput label={adminText("Latitude")} placeholder="59.3293" value={c.mapLat} onChange={(mapLat) => update({ ...c, mapLat })} />
+            <TextInput label={adminText("Longitude")} placeholder="18.0686" value={c.mapLng} onChange={(mapLng) => update({ ...c, mapLng })} />
           </div>
-          <p className="mt-2 text-xs text-slate-500">Tip: right-click a place in OpenStreetMap or Google Maps to copy its coordinates. Leave empty to hide the map.</p>
+          <p className="mt-2 text-xs text-slate-500">{adminText("Tip: right-click a place in OpenStreetMap or Google Maps to copy its coordinates. Leave empty to hide the map.")}</p>
         </Card>
       </div>
       <SaveBar busy={busy} dirty={dirty} onSave={() => void onSave()}>
-        {dirty && <span className="mr-auto pl-2 text-sm text-brand-300">Unsaved changes</span>}
+        {dirty && <span className="mr-auto pl-2 text-sm text-brand-300">{adminText("Unsaved changes")}</span>}
       </SaveBar>
     </>
   );
@@ -230,12 +235,13 @@ const SEO_PAGES: { key: "home" | "about" | "news" | "contact"; label: string; pa
 
 /** Approximation of how a page appears in Google search results. */
 function SearchPreview({ title, description, url }: { title: string; description: string; url: string }) {
+  const { t: adminText } = useAdminLanguage();
   const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
   return (
-    <div className="rounded-xl bg-white p-4 font-sans" aria-label="Google search result preview">
+    <div className="rounded-xl bg-white p-4 font-sans" aria-label={adminText("Google search result preview")}>
       <div className="truncate text-xs text-[#4d5156]">{url}</div>
-      <div className="mt-0.5 truncate text-lg leading-snug text-[#1a0dab]">{clip(title || "(no title)", 62)}</div>
-      <div className="mt-0.5 line-clamp-2 text-sm text-[#4d5156]">{clip(description || "(no description – Google will pick text from the page)", 160)}</div>
+      <div className="mt-0.5 truncate text-lg leading-snug text-[#1a0dab]">{clip(title || adminText("(no title)"), 62)}</div>
+      <div className="mt-0.5 line-clamp-2 text-sm text-[#4d5156]">{clip(description || adminText("(no description – Google will pick text from the page)"), 160)}</div>
     </div>
   );
 }
@@ -253,22 +259,23 @@ function SeoPageEditor({
   companyName: string;
   baseUrl: string;
 }) {
+  const { t: adminText } = useAdminLanguage();
   const fullTitle = page.key === "home" ? meta.title.sv : meta.title.sv ? `${meta.title.sv} | ${companyName}` : companyName;
   return (
     <div className="space-y-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-white">{page.label}</h3>
+        <h3 className="font-semibold text-white">{adminText(page.label)}</h3>
         <code className="text-xs text-slate-500">{page.path}</code>
       </div>
       <L10nInput
-        label="Meta title"
+        label={adminText("Meta title")}
         counter={page.key === "home" ? 60 : 60 - companyName.length - 3}
         value={meta.title}
         onChange={(title) => onChange({ ...meta, title })}
-        hint={page.key === "home" ? "Shown as-is in the browser tab and search results." : `“ | ${companyName}” is appended automatically.`}
+        hint={page.key === "home" ? adminText("Shown as-is in the browser tab and search results.") : adminText("“ | {0}” is appended automatically.", { "0": companyName })}
       />
       <L10nInput
-        label="Meta description"
+        label={adminText("Meta description")}
         multiline
         rows={2}
         counter={160}
@@ -281,9 +288,10 @@ function SeoPageEditor({
 }
 
 export function SettingsEditorPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
-  const general = useDraft<Settings>(content?.settings, (t, v) => backend.adminSaveSettings(t, v), "Settings");
-  const seoDraft = useDraft<SeoSettings>(content?.seo, (t, v) => backend.adminSaveSeo(t, v), "SEO settings");
+  const general = useDraft<Settings>(content?.settings, (t, v) => backend.adminSaveSettings(t, v), adminText("Settings"));
+  const seoDraft = useDraft<SeoSettings>(content?.seo, (t, v) => backend.adminSaveSeo(t, v), adminText("SEO settings"));
   const s = general.draft;
   const seo = seoDraft.draft;
   if (!s || !seo) return <Spinner />;
@@ -300,58 +308,56 @@ export function SettingsEditorPage() {
 
   return (
     <>
-      <PageHeader title="Site settings" description="Company details, social links and search engine optimisation (SEO)." />
+      <PageHeader title={adminText("Site settings")} description={adminText("Company details, social links and search engine optimisation (SEO).")} />
       <div className="space-y-6">
-        <Card title="Company">
+        <Card title={adminText("Company")}>
           <div className="grid gap-5 sm:grid-cols-2">
-            <TextInput label="Company name" value={s.companyName} onChange={(companyName) => update({ ...s, companyName })} />
-            <TextInput label="Organisation number" value={s.orgNumber} onChange={(orgNumber) => update({ ...s, orgNumber })} />
+            <TextInput label={adminText("Company name")} value={s.companyName} onChange={(companyName) => update({ ...s, companyName })} />
+            <TextInput label={adminText("Organisation number")} value={s.orgNumber} onChange={(orgNumber) => update({ ...s, orgNumber })} />
           </div>
           <div className="mt-5 space-y-5">
-            <L10nInput label="Tagline (under logo)" value={s.tagline} onChange={(tagline) => update({ ...s, tagline })} />
-            <L10nInput label="Footer text" multiline value={s.footerText} onChange={(footerText) => update({ ...s, footerText })} />
-            <L10nInput label="ROT deduction notice" value={s.rotNotice} onChange={(rotNotice) => update({ ...s, rotNotice })} />
+            <L10nInput label={adminText("Tagline (under logo)")} value={s.tagline} onChange={(tagline) => update({ ...s, tagline })} />
+            <L10nInput label={adminText("Footer text")} multiline value={s.footerText} onChange={(footerText) => update({ ...s, footerText })} />
+            <L10nInput label={adminText("ROT deduction notice")} value={s.rotNotice} onChange={(rotNotice) => update({ ...s, rotNotice })} />
           </div>
         </Card>
-        <Card title="Social media">
+        <Card title={adminText("Social media")}>
           <div className="grid gap-5 sm:grid-cols-3">
-            <TextInput label="Facebook URL" value={s.socials.facebook} onChange={(facebook) => update({ ...s, socials: { ...s.socials, facebook } })} />
-            <TextInput label="Instagram URL" value={s.socials.instagram} onChange={(instagram) => update({ ...s, socials: { ...s.socials, instagram } })} />
-            <TextInput label="LinkedIn URL" value={s.socials.linkedin} onChange={(linkedin) => update({ ...s, socials: { ...s.socials, linkedin } })} />
+            <TextInput label={adminText("Facebook URL")} value={s.socials.facebook} onChange={(facebook) => update({ ...s, socials: { ...s.socials, facebook } })} />
+            <TextInput label={adminText("Instagram URL")} value={s.socials.instagram} onChange={(instagram) => update({ ...s, socials: { ...s.socials, instagram } })} />
+            <TextInput label={adminText("LinkedIn URL")} value={s.socials.linkedin} onChange={(linkedin) => update({ ...s, socials: { ...s.socials, linkedin } })} />
           </div>
-          <p className="mt-2 text-xs text-slate-500">Leave empty to hide an icon. These links are also used as “sameAs” profiles in the structured data for Google.</p>
+          <p className="mt-2 text-xs text-slate-500">{adminText("Leave empty to hide an icon. These links are also used as “sameAs” profiles in the structured data for Google.")}</p>
         </Card>
 
-        <Card title="SEO · Search engines">
+        <Card title={adminText("SEO · Search engines")}>
           <div className="grid gap-5 sm:grid-cols-2">
             <TextInput
-              label="Website address (canonical URL)"
+              label={adminText("Website address (canonical URL)")}
               placeholder="https://www.remohusen.se"
               value={seo.siteUrl}
               onChange={(siteUrl) => setSeo({ siteUrl })}
-              hint="Your primary domain. Used for canonical links, language alternates and structured data. Leave empty to use the current address."
+              hint={adminText("Your primary domain. Used for canonical links, language alternates and structured data. Leave empty to use the current address.")}
             />
             <div className="flex flex-col justify-center gap-1">
-              <Toggle label="Allow search engines to index the site" checked={seo.allowIndexing} onChange={(allowIndexing) => setSeo({ allowIndexing })} />
+              <Toggle label={adminText("Allow search engines to index the site")} checked={seo.allowIndexing} onChange={(allowIndexing) => setSeo({ allowIndexing })} />
               <p className="text-xs text-slate-500">
-                {seo.allowIndexing ? "The site can appear in Google, Bing and others." : "A “noindex” tag is added to every page – use only while testing."}
+                {seo.allowIndexing ? adminText("The site can appear in Google, Bing and others.") : adminText("A “noindex” tag is added to every page – use only while testing.")}
               </p>
             </div>
           </div>
           <div className="mt-5">
             <L10nInput
-              label="Keywords"
+              label={adminText("Keywords")}
               value={seo.keywords}
               onChange={(keywords) => setSeo({ keywords })}
-              hint="Comma-separated. Used in the keywords meta tag and structured data; Google mainly ranks on page text, titles and descriptions."
+              hint={adminText("Comma-separated. Used in the keywords meta tag and structured data; Google mainly ranks on page text, titles and descriptions.")}
             />
           </div>
         </Card>
 
-        <Card title="SEO · Page titles & descriptions">
-          <p className="mb-4 text-sm text-slate-400">
-            Aim for titles under ~60 characters and descriptions of 120–160 characters. News articles automatically use their own title, excerpt and cover image.
-          </p>
+        <Card title={adminText("SEO · Page titles & descriptions")}>
+          <p className="mb-4 text-sm text-slate-400">{adminText("Aim for titles under ~60 characters and descriptions of 120–160 characters. News articles automatically use their own title, excerpt and cover image.")}</p>
           <div className="grid gap-5 xl:grid-cols-2">
             {SEO_PAGES.map((p) => (
               <SeoPageEditor key={p.key} page={p} meta={seo[p.key]} onChange={(m) => setSeo({ [p.key]: m })} companyName={s.companyName} baseUrl={baseUrl} />
@@ -359,64 +365,56 @@ export function SettingsEditorPage() {
           </div>
         </Card>
 
-        <Card title="SEO · Social sharing">
+        <Card title={adminText("SEO · Social sharing")}>
           <ImageInput
-            label="Default share image (Open Graph)"
+            label={adminText("Default share image (Open Graph)")}
             urlOnly
             aspect="aspect-[1200/630]"
             value={seo.ogImage ? urlRef(seo.ogImage) : undefined}
             onChange={(ref) => setSeo({ ogImage: ref?.__kind__ === "url" ? ref.url : "" })}
           />
-          <p className="mt-2 text-xs text-slate-500">
-            Shown when a page is shared on Facebook, LinkedIn, Messenger etc. Use a public https image URL, ideally 1200×630 px. If empty, the built-in Remohusen
-            share image is used.
-          </p>
+          <p className="mt-2 text-xs text-slate-500">{adminText("Shown when a page is shared on Facebook, LinkedIn, Messenger etc. Use a public https image URL, ideally 1200×630 px. If empty, the built-in Remohusen share image is used.")}</p>
         </Card>
 
-        <Card title="SEO · Local business (structured data)">
-          <p className="mb-4 text-sm text-slate-400">
-            Published as schema.org JSON-LD together with the address, phone, e-mail and map position from the Contact page – helps Google show your business in local
-            results.
-          </p>
+        <Card title={adminText("SEO · Local business (structured data)")}>
+          <p className="mb-4 text-sm text-slate-400">{adminText("Published as schema.org JSON-LD together with the address, phone, e-mail and map position from the Contact page – helps Google show your business in local results.")}</p>
           <div className="grid gap-5 sm:grid-cols-3">
-            <Field label="Business type">
+            <Field label={adminText("Business type")}>
               <select className="input" value={seo.businessType} onChange={(e) => setSeo({ businessType: e.target.value })}>
                 {BUSINESS_TYPES.map((b) => (
                   <option key={b.value} value={b.value} className="bg-ink-900">
-                    {b.label}
+                    {adminText(b.label)}
                   </option>
                 ))}
               </select>
             </Field>
-            <TextInput label="Area served" placeholder="Stockholm, Uppsala" value={seo.areaServed} onChange={(areaServed) => setSeo({ areaServed })} hint="Comma-separated places." />
-            <TextInput label="Price range" placeholder="$$" maxLength={20} value={seo.priceRange} onChange={(priceRange) => setSeo({ priceRange })} hint="E.g. $, $$ or $$$." />
+            <TextInput label={adminText("Area served")} placeholder="Stockholm, Uppsala" value={seo.areaServed} onChange={(areaServed) => setSeo({ areaServed })} hint={adminText("Comma-separated places.")} />
+            <TextInput label={adminText("Price range")} placeholder="$$" maxLength={20} value={seo.priceRange} onChange={(priceRange) => setSeo({ priceRange })} hint={adminText("E.g. $, $$ or $$$.")} />
           </div>
         </Card>
 
-        <Card title="SEO · Site verification">
+        <Card title={adminText("SEO · Site verification")}>
           <div className="grid gap-5 sm:grid-cols-2">
             <TextInput
-              label="Google Search Console code"
+              label={adminText("Google Search Console code")}
               placeholder="e.g. AbC123xyz…"
               value={seo.googleVerification}
               onChange={(googleVerification) => setSeo({ googleVerification: extractVerification(googleVerification) })}
-              hint="Paste the content value (or the whole <meta> tag) from the “HTML tag” method."
+              hint={adminText("Paste the content value (or the whole <meta> tag) from the “HTML tag” method.")}
             />
             <TextInput
-              label="Bing Webmaster Tools code"
+              label={adminText("Bing Webmaster Tools code")}
               placeholder="e.g. 1A2B3C…"
               value={seo.bingVerification}
               onChange={(bingVerification) => setSeo({ bingVerification: extractVerification(bingVerification) })}
-              hint="Paste the content value (or the whole <meta> tag) of msvalidate.01."
+              hint={adminText("Paste the content value (or the whole <meta> tag) of msvalidate.01.")}
             />
           </div>
-          <p className="mt-3 text-xs text-slate-500">
-            Submit <code className="text-slate-300">{baseUrl}/sitemap.xml</code> in Search Console. If the meta-tag method fails, use DNS verification for your domain instead.
-          </p>
+          <p className="mt-3 text-xs text-slate-500">{adminText("Submit")}<code className="text-slate-300">{baseUrl}/sitemap.xml</code>{adminText("in Search Console. If the meta-tag method fails, use DNS verification for your domain instead.")}</p>
         </Card>
       </div>
       <SaveBar busy={busy} dirty={dirty} onSave={() => void save()}>
-        {dirty && <span className="mr-auto pl-2 text-sm text-brand-300">Unsaved changes</span>}
+        {dirty && <span className="mr-auto pl-2 text-sm text-brand-300">{adminText("Unsaved changes")}</span>}
       </SaveBar>
     </>
   );

@@ -1,7 +1,8 @@
 @import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans/wght.css";
 
 @theme {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Plus Jakarta Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --color-ink-950: #070b14;
   --color-ink-900: #0b1220;
   --color-ink-800: #111a2e;
@@ -84,6 +85,11 @@
 
 @utility label {
   @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-400;
+}
+
+.input[aria-invalid="true"], .input:user-invalid {
+  border-color: #f87171;
+  box-shadow: 0 0 0 2px rgb(248 113 113 / 0.2);
 }
 
 @utility section-title {

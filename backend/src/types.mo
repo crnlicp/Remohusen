@@ -2,6 +2,75 @@ import Map "mo:core/Map";
 import List "mo:core/List";
 
 module {
+  public type DocumentBrand = {
+    legalName : Text; orgNumber : Text; address : Text; contact : Text;
+    vatNumber : Text; fTax : Bool; paymentDetails : Text;
+    header : L10n; footer : L10n; logoData : Text;
+  };
+  public type DocumentSettings = {
+    brand : DocumentBrand;
+    invoicePrefix : Text;
+    paymentDays : Nat;
+    financialYearEnd : Text;
+    vatRegistered : Text;
+    employees : Text;
+    partnerType : Text;
+    accountingMethod : Text;
+    vatPeriod : Text;
+    archiveService : Text;
+    privacyApproved : Bool;
+  };
+  public type DocumentLine = {
+    description : Text;
+    quantityMilli : Nat;
+    unitOre : Nat;
+    discountBps : Nat;
+    vatBps : Nat;
+    category : Text;
+    treatment : Text;
+    exemptionReason : Text;
+  };
+  public type DocumentInput = {
+    kind : Text; language : Text; title : Text;
+    customerName : Text; customerAddress : Text; customerVat : Text; customerType : Text;
+    project : Text; issueDate : Text; supplyDate : Text; dueDate : Text;
+    terms : Text; notes : Text; internalNotes : Text;
+    lines : [DocumentLine]; sourceId : ?Nat;
+    reverseChargeConfirmed : Bool;
+    rotOre : Nat; rotConfirmed : Bool;
+  };
+  public type DocumentTotals = { netOre : Nat; vatOre : Nat; grossOre : Nat; payableOre : Nat };
+  public type DocumentEvent = { at : Int; action : Text; detail : Text };
+  public type DocumentPayment = { date : Text; amountOre : Nat; reference : Text };
+  public type DocumentEvidence = {
+    archiveReference : Text; einvoiceReference : Text; acceptanceReference : Text;
+  };
+  public type BusinessDocument = {
+    id : Nat; revision : Nat; input : DocumentInput;
+    brand : DocumentBrand; totals : DocumentTotals;
+    number : Text; sourceNumber : Text; issuedAt : ?Int; createdAt : Int;
+    pdfReady : Bool; pdfHash : Text; pdfChunks : Nat;
+    shareHash : ?Text;
+    payments : [DocumentPayment]; evidence : DocumentEvidence; events : [DocumentEvent];
+  };
+  public type DocumentFile = { chunks : [Blob]; size : Nat };
+  public type DocumentSummary = {
+    id : Nat; kind : Text; title : Text; number : Text; customerName : Text; issueDate : Text;
+    issued : Bool; pdfReady : Bool; archived : Bool;
+  };
+  public type DocumentShare = { documentId : Nat; expiresAt : Int };
+  public type SharedDocumentInfo = {
+    number : Text; title : Text; language : Text; hash : Text; chunks : Nat; expiresAt : Int;
+  };
+  public type DocumentState = {
+    var settings : ?DocumentSettings;
+    records : Map.Map<Nat, BusinessDocument>;
+    files : Map.Map<Nat, DocumentFile>;
+    shares : Map.Map<Text, DocumentShare>;
+    var nextId : Nat;
+    var nextNumber : Nat;
+  };
+
   // ---------- Shared building blocks ----------
 
   /// Localized text: Swedish (default) and English.

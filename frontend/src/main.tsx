@@ -12,11 +12,22 @@ import { ContactPage } from "./pages/Contact";
 import { NotFoundPage } from "./pages/NotFound";
 
 const AdminApp = lazy(() => import("./admin/AdminApp"));
+const SharedDocumentPage = lazy(() => import("./pages/SharedDocument"));
+
+if (["/documents", "/documents.html"].includes(window.location.pathname)) {
+  document.title = "Document / Dokument";
+  for (const [name, content] of [["robots", "noindex, nofollow, noarchive"], ["referrer", "no-referrer"]]) {
+    const meta = document.createElement("meta");
+    meta.name = name; meta.content = content; document.head.append(meta);
+  }
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path="/documents" element={<Suspense fallback={<Spinner />}><SharedDocumentPage /></Suspense>} />
+        <Route path="/documents.html" element={<Suspense fallback={<Spinner />}><SharedDocumentPage /></Suspense>} />
         <Route
           path="/admin/*"
           element={

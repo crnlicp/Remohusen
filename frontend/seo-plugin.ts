@@ -38,7 +38,17 @@ export function seoFiles(siteUrl: string, environment: string): Plugin {
     transformIndexHtml(html) {
       return html.replaceAll("%SITE_URL%", base);
     },
-    generateBundle() {
+    generateBundle: { order: "post", handler(_, bundle) {
+      const shell = bundle["index.html"];
+      if (!shell || shell.type !== "asset" || typeof shell.source !== "string") {
+        this.error("Cannot build the isolated document page: index.html is missing.");
+      }
+      const documentShell = shell.source
+        .replace(/<title>[\s\S]*?<\/title>/, "<title>Document / Dokument</title>")
+        .replace(/<meta\s+name="robots"[^>]*\/?>/, '<meta name="robots" content="noindex, nofollow, noarchive" />')
+        .replace(/<link\s+rel="(?:canonical|alternate)"[^>]*\/?>/g, "")
+        .replace("</head>", '<meta name="referrer" content="no-referrer" /></head>');
+      this.emitFile({ type: "asset", fileName: "documents.html", source: documentShell });
       const today = new Date().toISOString();
       const url = (path: string, lastmod: string, priority: string) => {
         const loc = `${base}${path}`;
@@ -68,11 +78,12 @@ ${entries.join("\n")}
       const robots = `User-agent: *
 Allow: /
 Disallow: /admin
+Disallow: /documents
 
 Sitemap: ${base}/sitemap.xml
 `;
       this.emitFile({ type: "asset", fileName: "sitemap.xml", source: sitemap });
       this.emitFile({ type: "asset", fileName: "robots.txt", source: robots });
-    },
+    } },
   };
 }

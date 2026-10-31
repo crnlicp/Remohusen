@@ -4,6 +4,7 @@ import ImagesMixin "mixins/Images";
 import ContentMixin "mixins/Content";
 import MessagesMixin "mixins/Messages";
 import DashboardMixin "mixins/Dashboard";
+import DocumentsMixin "mixins/Documents";
 
 actor {
   let auth : Types.AuthState;
@@ -11,10 +12,12 @@ actor {
   let imageState : Types.ImageState;
   let messageState : Types.MessageState;
   let seoState : Types.SeoState;
+  let documentState : Types.DocumentState;
 
   include AuthMixin(auth);
   include ImagesMixin(auth, imageState);
   include ContentMixin(auth, content, imageState, seoState);
   include MessagesMixin(auth, messageState);
   include DashboardMixin(auth, content, imageState, messageState);
+  include DocumentsMixin(auth, documentState);
 };

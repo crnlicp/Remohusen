@@ -3,6 +3,16 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
 
+/documents
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+/documents/*
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow, noarchive
+
 # Fingerprinted build assets never change - cache them hard (faster repeat visits, better Core Web Vitals)
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
@@ -10,6 +20,12 @@
 # HTML must revalidate so deploys and SEO changes are picked up
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# Clean URL /documents resolves to this real asset, not the SPA fallback.
+/documents.html
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+  X-Robots-Tag: noindex, nofollow, noarchive
 
 /*.png
   Cache-Control: public, max-age=86400

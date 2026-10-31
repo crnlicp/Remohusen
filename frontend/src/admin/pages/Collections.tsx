@@ -1,3 +1,4 @@
+import { useAdminLanguage } from "../language";
 import { House, MessageSquareQuote } from "lucide-react";
 import { backend, emptyL10n, nsToDate, urlRef, type ImageRef, type NewsPost, type Project, type Service, type Slide, type Testimonial } from "../../lib/api";
 import { ICONS, ServiceIcon } from "../../components/Icons";
@@ -14,16 +15,17 @@ const nextOrder = (items: { order: bigint }[]) => items.reduce((m, i) => (i.orde
 const requiredImage = (ref: ImageRef) => (ref.__kind__ === "url" && !ref.url ? undefined : ref);
 
 export function IconSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t: adminText } = useAdminLanguage();
   return (
     <div>
-      <span className="label">Icon</span>
+      <span className="label">{adminText("Icon")}</span>
       <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
         {Object.entries(ICONS).map(([key, { label }]) => (
           <button
             key={key}
             type="button"
-            title={label}
-            aria-label={label}
+            title={adminText(label)}
+            aria-label={adminText(label)}
             aria-pressed={value === key}
             onClick={() => onChange(key)}
             className={`flex aspect-square items-center justify-center rounded-xl border transition ${
@@ -39,14 +41,15 @@ export function IconSelect({ value, onChange }: { value: string; onChange: (v: s
 }
 
 export function SlidesPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
   if (!content) return <Spinner />;
   const items = [...content.slides].sort(byOrder);
   return (
     <CollectionManager<Slide>
-      title="Hero slideshow"
-      description="Full-screen slides at the top of the home page. They rotate automatically every 7 seconds."
-      itemName="Slide"
+      title={adminText("Hero slideshow")}
+      description={adminText("Full-screen slides at the top of the home page. They rotate automatically every 7 seconds.")}
+      itemName={adminText("Slide")}
       items={items}
       create={() => ({
         id: 0n,
@@ -62,18 +65,18 @@ export function SlidesPage() {
         title: s.title.sv,
         subtitle: s.subtitle.sv,
         image: requiredImage(s.image),
-        badges: [{ text: s.active ? "Active" : "Hidden", tone: s.active ? "green" : "slate" }, { text: `#${s.order}` }],
+        badges: [{ text: s.active ? adminText("Active") : adminText("Hidden"), tone: s.active ? "green" : "slate" }, { text: `#${s.order}` }],
       })}
       editor={(s, set) => (
         <>
-          <ImageInput label="Background image" optional={false} value={requiredImage(s.image)} onChange={(image) => set({ ...s, image: image ?? urlRef("") })} />
-          <L10nInput label="Title" required value={s.title} onChange={(title) => set({ ...s, title })} />
-          <L10nInput label="Subtitle" multiline rows={2} value={s.subtitle} onChange={(subtitle) => set({ ...s, subtitle })} />
-          <L10nInput label="Button text" value={s.ctaText} onChange={(ctaText) => set({ ...s, ctaText })} />
-          <TextInput label="Button link" hint="Internal path like /kontakt or /#tjanster, or a full https:// URL" value={s.ctaLink} onChange={(ctaLink) => set({ ...s, ctaLink })} />
+          <ImageInput label={adminText("Background image")} optional={false} value={requiredImage(s.image)} onChange={(image) => set({ ...s, image: image ?? urlRef("") })} />
+          <L10nInput label={adminText("Title")} required value={s.title} onChange={(title) => set({ ...s, title })} />
+          <L10nInput label={adminText("Subtitle")} multiline rows={2} value={s.subtitle} onChange={(subtitle) => set({ ...s, subtitle })} />
+          <L10nInput label={adminText("Button text")} value={s.ctaText} onChange={(ctaText) => set({ ...s, ctaText })} />
+          <TextInput label={adminText("Button link")} hint={adminText("Internal path like /kontakt or /#tjanster, or a full https:// URL")} value={s.ctaLink} onChange={(ctaLink) => set({ ...s, ctaLink })} />
           <div className="grid gap-4 sm:grid-cols-2">
             <OrderInput value={s.order} onChange={(order) => set({ ...s, order })} />
-            <div className="pt-6"><Toggle label="Visible on site" checked={s.active} onChange={(active) => set({ ...s, active })} /></div>
+            <div className="pt-6"><Toggle label={adminText("Visible on site")} checked={s.active} onChange={(active) => set({ ...s, active })} /></div>
           </div>
         </>
       )}
@@ -84,14 +87,15 @@ export function SlidesPage() {
 }
 
 export function ServicesPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
   if (!content) return <Spinner />;
   const items = [...content.services].sort(byOrder);
   return (
     <CollectionManager<Service>
-      title="Services"
-      description="The service cards shown on the home page."
-      itemName="Service"
+      title={adminText("Services")}
+      description={adminText("The service cards shown on the home page.")}
+      itemName={adminText("Service")}
       items={items}
       create={() => ({ id: 0n, icon: "house", title: emptyL10n(), description: emptyL10n(), order: nextOrder(items), active: true })}
       summary={(s) => ({
@@ -99,17 +103,17 @@ export function ServicesPage() {
         subtitle: s.description.sv,
         image: s.image,
         icon: <ServiceIcon name={s.icon} className="h-7 w-7" />,
-        badges: [{ text: s.active ? "Active" : "Hidden", tone: s.active ? "green" : "slate" }, { text: `#${s.order}` }],
+        badges: [{ text: s.active ? adminText("Active") : adminText("Hidden"), tone: s.active ? "green" : "slate" }, { text: `#${s.order}` }],
       })}
       editor={(s, set) => (
         <>
           <IconSelect value={s.icon} onChange={(icon) => set({ ...s, icon })} />
-          <L10nInput label="Title" required value={s.title} onChange={(title) => set({ ...s, title })} />
-          <L10nInput label="Description" multiline value={s.description} onChange={(description) => set({ ...s, description })} />
-          <ImageInput label="Background image (optional)" value={s.image} onChange={(image) => set({ ...s, image })} />
+          <L10nInput label={adminText("Title")} required value={s.title} onChange={(title) => set({ ...s, title })} />
+          <L10nInput label={adminText("Description")} multiline value={s.description} onChange={(description) => set({ ...s, description })} />
+          <ImageInput label={adminText("Background image (optional)")} value={s.image} onChange={(image) => set({ ...s, image })} />
           <div className="grid gap-4 sm:grid-cols-2">
             <OrderInput value={s.order} onChange={(order) => set({ ...s, order })} />
-            <div className="pt-6"><Toggle label="Visible on site" checked={s.active} onChange={(active) => set({ ...s, active })} /></div>
+            <div className="pt-6"><Toggle label={adminText("Visible on site")} checked={s.active} onChange={(active) => set({ ...s, active })} /></div>
           </div>
         </>
       )}
@@ -120,14 +124,15 @@ export function ServicesPage() {
 }
 
 export function ProjectsPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
   if (!content) return <Spinner />;
   const items = [...content.projects].sort(byOrder);
   return (
     <CollectionManager<Project>
-      title="Projects"
-      description="Reference projects shown in the gallery. The first image is used as cover; visitors can browse all images in a lightbox."
-      itemName="Project"
+      title={adminText("Projects")}
+      description={adminText("Reference projects shown in the gallery. The first image is used as cover; visitors can browse all images in a lightbox.")}
+      itemName={adminText("Project")}
       items={items}
       create={() => ({
         id: 0n,
@@ -146,24 +151,24 @@ export function ProjectsPage() {
         image: p.images[0],
         icon: <House className="h-7 w-7" />,
         badges: [
-          ...(p.featured ? [{ text: "Featured", tone: "amber" as const }] : []),
-          { text: `${p.images.length} images` },
+          ...(p.featured ? [{ text: adminText("Featured"), tone: "amber" as const }] : []),
+          { text: adminText("{0} images", { "0": p.images.length }) },
           { text: `#${p.order}` },
         ],
       })}
       editor={(p, set) => (
         <>
-          <L10nInput label="Title" required value={p.title} onChange={(title) => set({ ...p, title })} />
-          <L10nInput label="Category" value={p.category} onChange={(category) => set({ ...p, category })} />
-          <L10nInput label="Description" multiline value={p.description} onChange={(description) => set({ ...p, description })} />
+          <L10nInput label={adminText("Title")} required value={p.title} onChange={(title) => set({ ...p, title })} />
+          <L10nInput label={adminText("Category")} value={p.category} onChange={(category) => set({ ...p, category })} />
+          <L10nInput label={adminText("Description")} multiline value={p.description} onChange={(description) => set({ ...p, description })} />
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextInput label="Location" value={p.location} onChange={(location) => set({ ...p, location })} />
-            <TextInput label="Year" value={p.year} onChange={(year) => set({ ...p, year })} />
+            <TextInput label={adminText("Location")} value={p.location} onChange={(location) => set({ ...p, location })} />
+            <TextInput label={adminText("Year")} value={p.year} onChange={(year) => set({ ...p, year })} />
           </div>
-          <MultiImageInput label="Images" value={p.images} onChange={(images) => set({ ...p, images })} />
+          <MultiImageInput label={adminText("Images")} value={p.images} onChange={(images) => set({ ...p, images })} />
           <div className="grid gap-4 sm:grid-cols-2">
             <OrderInput value={p.order} onChange={(order) => set({ ...p, order })} />
-            <div className="pt-6"><Toggle label="Featured (large tile)" checked={p.featured} onChange={(featured) => set({ ...p, featured })} /></div>
+            <div className="pt-6"><Toggle label={adminText("Featured (large tile)")} checked={p.featured} onChange={(featured) => set({ ...p, featured })} /></div>
           </div>
         </>
       )}
@@ -174,14 +179,15 @@ export function ProjectsPage() {
 }
 
 export function TestimonialsPage() {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
   if (!content) return <Spinner />;
   const items = [...content.testimonials].sort(byOrder);
   return (
     <CollectionManager<Testimonial>
-      title="Testimonials"
-      description="Customer quotes shown on the home page."
-      itemName="Testimonial"
+      title={adminText("Testimonials")}
+      description={adminText("Customer quotes shown on the home page.")}
+      itemName={adminText("Testimonial")}
       items={items}
       create={() => ({ id: 0n, name: "", role: emptyL10n(), quote: emptyL10n(), rating: 5n, order: nextOrder(items), active: true })}
       summary={(t) => ({
@@ -189,15 +195,15 @@ export function TestimonialsPage() {
         subtitle: t.quote.sv,
         image: t.avatar,
         icon: <MessageSquareQuote className="h-7 w-7" />,
-        badges: [{ text: t.active ? "Active" : "Hidden", tone: t.active ? "green" : "slate" }, { text: "★".repeat(Number(t.rating)) }],
+        badges: [{ text: t.active ? adminText("Active") : adminText("Hidden"), tone: t.active ? "green" : "slate" }, { text: "★".repeat(Number(t.rating)) }],
       })}
       editor={(t, set) => (
         <>
-          <TextInput label="Name" value={t.name} onChange={(name) => set({ ...t, name })} />
-          <L10nInput label="Role / location" value={t.role} onChange={(role) => set({ ...t, role })} />
-          <L10nInput label="Quote" required multiline rows={4} value={t.quote} onChange={(quote) => set({ ...t, quote })} />
+          <TextInput label={adminText("Name")} value={t.name} onChange={(name) => set({ ...t, name })} />
+          <L10nInput label={adminText("Role / location")} value={t.role} onChange={(role) => set({ ...t, role })} />
+          <L10nInput label={adminText("Quote")} required multiline rows={4} value={t.quote} onChange={(quote) => set({ ...t, quote })} />
           <div>
-            <span className="label">Rating</span>
+            <span className="label">{adminText("Rating")}</span>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((n) => (
                 <button
@@ -205,17 +211,17 @@ export function TestimonialsPage() {
                   type="button"
                   onClick={() => set({ ...t, rating: BigInt(n) })}
                   className={`text-2xl ${n <= Number(t.rating) ? "text-brand-400" : "text-slate-600"}`}
-                  aria-label={`${n} stars`}
+                  aria-label={adminText("{0} stars", { "0": n })}
                 >
                   ★
                 </button>
               ))}
             </div>
           </div>
-          <ImageInput label="Photo (optional)" aspect="aspect-square max-w-40" value={t.avatar} onChange={(avatar) => set({ ...t, avatar })} />
+          <ImageInput label={adminText("Photo (optional)")} aspect="aspect-square max-w-40" value={t.avatar} onChange={(avatar) => set({ ...t, avatar })} />
           <div className="grid gap-4 sm:grid-cols-2">
             <OrderInput value={t.order} onChange={(order) => set({ ...t, order })} />
-            <div className="pt-6"><Toggle label="Visible on site" checked={t.active} onChange={(active) => set({ ...t, active })} /></div>
+            <div className="pt-6"><Toggle label={adminText("Visible on site")} checked={t.active} onChange={(active) => set({ ...t, active })} /></div>
           </div>
         </>
       )}
@@ -226,15 +232,16 @@ export function TestimonialsPage() {
 }
 
 export function NewsPage() {
+  const { language, t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
   if (!content) return <Spinner />;
   const items = [...content.news].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
-  const fmt = new Intl.DateTimeFormat("sv-SE", { dateStyle: "medium" });
+  const fmt = new Intl.DateTimeFormat(language === "sv" ? "sv-SE" : "en-GB", { dateStyle: "medium" });
   return (
     <CollectionManager<NewsPost>
-      title="News"
-      description="Articles shown on the news page. The three latest published posts also appear on the home page."
-      itemName="News post"
+      title={adminText("News")}
+      description={adminText("Articles shown on the news page. The three latest published posts also appear on the home page.")}
+      itemName={adminText("News post")}
       items={items}
       create={() => ({
         id: 0n,
@@ -248,18 +255,18 @@ export function NewsPage() {
       })}
       summary={(n) => ({
         title: n.title.sv,
-        subtitle: n.published && n.publishedAt > 0n ? `Published ${fmt.format(nsToDate(n.publishedAt))}` : "Not published",
+        subtitle: n.published && n.publishedAt > 0n ? adminText("Published {0}", { "0": fmt.format(nsToDate(n.publishedAt)) }) : adminText("Not published"),
         image: n.cover,
-        badges: [{ text: n.published ? "Published" : "Draft", tone: n.published ? "green" : "amber" }],
+        badges: [{ text: n.published ? adminText("Published") : adminText("Draft"), tone: n.published ? "green" : "amber" }],
       })}
       editor={(n, set) => (
         <>
-          <ImageInput label="Cover image" value={n.cover} onChange={(cover) => set({ ...n, cover })} />
-          <L10nInput label="Title" required value={n.title} onChange={(title) => set({ ...n, title })} />
-          <L10nInput label="Excerpt" multiline rows={2} value={n.excerpt} onChange={(excerpt) => set({ ...n, excerpt })} />
-          <L10nInput label="Body" multiline rows={12} value={n.body} onChange={(body) => set({ ...n, body })} />
-          <p className="-mt-3 text-xs text-slate-500">Separate paragraphs with an empty line.</p>
-          <Toggle label="Published" checked={n.published} onChange={(published) => set({ ...n, published })} />
+          <ImageInput label={adminText("Cover image")} value={n.cover} onChange={(cover) => set({ ...n, cover })} />
+          <L10nInput label={adminText("Title")} required value={n.title} onChange={(title) => set({ ...n, title })} />
+          <L10nInput label={adminText("Excerpt")} multiline rows={2} value={n.excerpt} onChange={(excerpt) => set({ ...n, excerpt })} />
+          <L10nInput label={adminText("Body")} multiline rows={12} value={n.body} onChange={(body) => set({ ...n, body })} />
+          <p className="-mt-3 text-xs text-slate-500">{adminText("Separate paragraphs with an empty line.")}</p>
+          <Toggle label={adminText("Published")} checked={n.published} onChange={(published) => set({ ...n, published })} />
         </>
       )}
       save={(t, n) => backend.adminSaveNews(t, n)}

@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { useAdminLanguage } from "../language";
+import { createContext, useCallback, useContext, useId, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { CircleCheck, TriangleAlert, X } from "lucide-react";
 import type { L10n } from "../../lib/api";
@@ -9,6 +10,7 @@ type Toast = { id: number; kind: "ok" | "err"; text: string };
 const ToastContext = createContext<(kind: Toast["kind"], text: string) => void>(() => {});
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t: adminText } = useAdminLanguage();
   const [toasts, setToasts] = useState<Toast[]>([]);
   const push = useCallback((kind: Toast["kind"], text: string) => {
     const id = Date.now() + Math.random();
@@ -35,8 +37,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               ) : (
                 <TriangleAlert className="h-5 w-5 shrink-0 text-red-300" />
               )}
-              <span className="flex-1 text-slate-100">{t.text}</span>
-              <button onClick={() => setToasts((x) => x.filter((y) => y.id !== t.id))} aria-label="Dismiss">
+              <span className="flex-1 text-slate-100">{adminText(t.text)}</span>
+              <button onClick={() => setToasts((x) => x.filter((y) => y.id !== t.id))} aria-label={adminText("Dismiss")}>
                 <X className="h-4 w-4 text-slate-400" />
               </button>
             </motion.div>
@@ -83,13 +85,14 @@ export function Card({ title, children, className = "" }: { title?: string; chil
 
 /* ---------- Form fields ---------- */
 
-export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+export function Field({ label, hint, children, error, errorId }: { label: string; hint?: string; children: ReactNode; error?: string; errorId?: string }) {
   return (
-    <div>
+    <label className="block min-w-0">
       <span className="label">{label}</span>
       {children}
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
-    </div>
+      {error && <span id={errorId} role="alert" className="mt-1 block text-xs text-red-200">{error}</span>}
+    </label>
   );
 }
 
@@ -101,6 +104,10 @@ export function TextInput({
   type = "text",
   placeholder,
   maxLength,
+  name,
+  error,
+  required,
+  readOnly,
 }: {
   label: string;
   value: string;
@@ -109,15 +116,26 @@ export function TextInput({
   type?: string;
   placeholder?: string;
   maxLength?: number;
+  name?: string;
+  error?: string;
+  required?: boolean;
+  readOnly?: boolean;
 }) {
+  const { t: adminText } = useAdminLanguage();
+  const errorId = useId();
   return (
-    <Field label={label} hint={hint}>
+    <Field label={label} hint={hint} error={error} errorId={errorId}>
       <input
         className="input"
         type={type}
         value={value}
-        placeholder={placeholder}
+        placeholder={placeholder ?? adminText("Enter {0}…", { "0": label.toLowerCase() })}
         maxLength={maxLength}
+        name={name}
+        required={required}
+        readOnly={readOnly}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
         onChange={(e) => onChange(e.target.value)}
       />
     </Field>
@@ -134,6 +152,8 @@ export function L10nInput({
   required = false,
   counter,
   hint,
+  name,
+  errors,
 }: {
   label: string;
   value: L10n;
@@ -144,7 +164,10 @@ export function L10nInput({
   /** Recommended max length; shows a live character counter. */
   counter?: number;
   hint?: string;
+  name?: string;
+  errors?: Record<string, string>;
 }) {
+  const { t: adminText } = useAdminLanguage();
   const langs = [
     { key: "sv" as const, flag: "🇸🇪", name: "Svenska" },
     { key: "en" as const, flag: "🇬🇧", name: "English" },
@@ -164,6 +187,9 @@ export function L10nInput({
             {multiline ? (
               <textarea
                 className="input pr-16"
+                name={name ? `${name}.${l.key}` : undefined}
+                aria-invalid={name && errors?.[`${name}.${l.key}`] ? true : undefined}
+                placeholder={adminText("Example: {0}", { "0": label })}
                 rows={rows}
                 value={value[l.key]}
                 onChange={(e) => onChange({ ...value, [l.key]: e.target.value })}
@@ -172,11 +198,15 @@ export function L10nInput({
             ) : (
               <input
                 className="input pr-16"
+                name={name ? `${name}.${l.key}` : undefined}
+                aria-invalid={name && errors?.[`${name}.${l.key}`] ? true : undefined}
+                placeholder={adminText("Example: {0}", { "0": label })}
                 value={value[l.key]}
                 onChange={(e) => onChange({ ...value, [l.key]: e.target.value })}
                 aria-label={`${label} (${l.name})`}
               />
             )}
+            {name && errors?.[`${name}.${l.key}`] && <p role="alert" className="mt-1 text-xs text-red-200">{adminText(errors[`${name}.${l.key}`])}</p>}
             {counter !== undefined && (
               <span className={`mt-1 block text-right text-[11px] ${value[l.key].length > counter ? "text-amber-300" : "text-slate-500"}`}>
                 {value[l.key].length}/{counter}
@@ -208,11 +238,12 @@ export function Toggle({ label, checked, onChange }: { label: string; checked: b
 }
 
 export function SaveBar({ busy, onSave, dirty = true, children }: { busy: boolean; onSave: () => void; dirty?: boolean; children?: ReactNode }) {
+  const { t: adminText } = useAdminLanguage();
   return (
     <div className="glass-strong sticky bottom-4 z-20 mt-6 flex items-center justify-end gap-3 rounded-2xl p-3">
       {children}
       <button className="btn btn-primary" onClick={onSave} disabled={busy || !dirty}>
-        {busy ? "Saving…" : "Save changes"}
+        {busy ? adminText("Saving…") : adminText("Save changes")}
       </button>
     </div>
   );

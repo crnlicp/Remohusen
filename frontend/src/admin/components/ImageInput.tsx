@@ -1,3 +1,4 @@
+import { useAdminLanguage } from "../language";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { ArrowDown, ArrowUp, Check, Link2, Library, Plus, Search, Trash2, Upload } from "lucide-react";
 import { backend, storedRef, unwrap, urlRef, type ImageInfo, type ImageRef } from "../../lib/api";
@@ -23,6 +24,7 @@ export function useImageLibrary() {
 }
 
 function UrlPreview({ url }: { url: string }) {
+  const { t: adminText } = useAdminLanguage();
   const { src } = useImageSrc(url ? urlRef(url) : undefined);
   const [state, setState] = useState<"loading" | "ok" | "err">("loading");
   useEffect(() => setState("loading"), [src]);
@@ -35,7 +37,7 @@ function UrlPreview({ url }: { url: string }) {
           state === "ok" ? "bg-emerald-500/80 text-white" : state === "err" ? "bg-red-500/80 text-white" : "bg-black/50 text-slate-200"
         }`}
       >
-        {state === "ok" ? "Preview OK" : state === "err" ? "Could not load image" : "Loading preview…"}
+        {state === "ok" ? adminText("Preview OK") : state === "err" ? adminText("Could not load image") : adminText("Loading preview…")}
       </span>
     </div>
   );
@@ -43,23 +45,24 @@ function UrlPreview({ url }: { url: string }) {
 
 /** Grid of external image URLs already used somewhere on the site, for quick reuse. */
 function UsedUrlList({ selected, exclude = [], onSelect }: { selected: string; exclude?: string[]; onSelect: (url: string) => void }) {
+  const { t: adminText } = useAdminLanguage();
   const { content } = useAdmin();
   const [query, setQuery] = useState("");
-  const all = useMemo(() => collectUsedUrls(content), [content]);
+  const all = useMemo(() => collectUsedUrls(content, adminText), [content, adminText]);
   const q = query.trim().toLowerCase();
   const list = q ? all.filter((u) => u.url.toLowerCase().includes(q) || u.where.some((w) => w.toLowerCase().includes(q))) : all;
   if (all.length === 0) return null;
   return (
     <div className="mt-4">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Already used on the site ({all.length})</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{adminText("Already used on the site (")}{all.length})</span>
         {all.length > 6 && (
           <label className="relative">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
             <input
               className="w-40 rounded-md border border-white/10 bg-ink-950/50 py-1 pl-7 pr-2 text-xs text-white placeholder:text-slate-500 focus:border-brand-400/60 focus:outline-none"
-              placeholder="Filter…"
-              aria-label="Filter used image URLs"
+              placeholder={adminText("Filter…")}
+              aria-label={adminText("Filter used image URLs")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -75,8 +78,8 @@ function UsedUrlList({ selected, exclude = [], onSelect }: { selected: string; e
               key={url}
               type="button"
               onClick={() => onSelect(url)}
-              title={`${url}\n\nUsed in:\n• ${where.join("\n• ")}`}
-              aria-label={`Use image ${url}`}
+              title={adminText("{0}\n\nUsed in:\n• {1}", { "0": url, "1": where.join("\n• ") })}
+              aria-label={adminText("Use image {0}", { "0": url })}
               aria-pressed={isSelected}
               className={`group relative aspect-square overflow-hidden rounded-lg border transition ${
                 isSelected ? "border-brand-400 ring-2 ring-brand-400/40" : "border-white/10 hover:border-brand-400"
@@ -89,15 +92,15 @@ function UsedUrlList({ selected, exclude = [], onSelect }: { selected: string; e
                 </span>
               )}
               {isExcluded && !isSelected && (
-                <span className="absolute left-1 top-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-slate-200">Added</span>
+                <span className="absolute left-1 top-1 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-slate-200">{adminText("Added")}</span>
               )}
               <span className="absolute inset-x-0 bottom-0 truncate bg-black/65 px-1 py-0.5 text-[10px] text-slate-200">
-                {where.length > 1 ? `${where.length} places` : where[0]}
+                {where.length > 1 ? adminText("{0} places", { "0": where.length }) : where[0]}
               </span>
             </button>
           );
         })}
-        {list.length === 0 && <p className="col-span-full py-3 text-center text-xs text-slate-500">No matches.</p>}
+        {list.length === 0 && <p className="col-span-full py-3 text-center text-xs text-slate-500">{adminText("No matches.")}</p>}
       </div>
     </div>
   );
@@ -120,6 +123,7 @@ export function ImagePicker({
   /** Only allow external URLs (for places crawlers must reach, like the social share image). */
   urlOnly?: boolean;
 }) {
+  const { t: adminText } = useAdminLanguage();
   const { call } = useAdmin();
   const toast = useToast();
   const currentUrl = current?.__kind__ === "url" ? current.url : "";
@@ -147,7 +151,7 @@ export function ImagePicker({
     setProgress(0);
     try {
       const info = await call((t) => uploadImage(t, file, setProgress));
-      toast.ok(`Uploaded ${info.name}`);
+      toast.ok(adminText("Uploaded {0}", { "0": info.name }));
       onPick(storedRef(info.id));
     } catch (e) {
       toast.err(e);
@@ -164,9 +168,9 @@ export function ImagePicker({
 
   const urlError = url ? validateImageUrl(url) : null;
   const tabs: { id: Tab; label: string; Icon: typeof Upload }[] = [
-    { id: "upload" as Tab, label: "Upload", Icon: Upload },
-    { id: "url" as Tab, label: "From URL", Icon: Link2 },
-    { id: "library" as Tab, label: "Library", Icon: Library },
+    { id: "upload" as Tab, label: adminText("Upload"), Icon: Upload },
+    { id: "url" as Tab, label: adminText("From URL"), Icon: Link2 },
+    { id: "library" as Tab, label: adminText("Library"), Icon: Library },
   ].filter((t) => !urlOnly || t.id === "url");
 
   return (
@@ -213,12 +217,12 @@ export function ImagePicker({
           {progress === null ? (
             <>
               <Upload className="h-6 w-6 text-brand-300" />
-              <span className="text-slate-200">Drop an image here or click to choose</span>
-              <span className="text-xs text-slate-500">JPEG, PNG, WebP, GIF, AVIF · large images are resized to 1920px</span>
+              <span className="text-slate-200">{adminText("Drop an image here or click to choose")}</span>
+              <span className="text-xs text-slate-500">{adminText("JPEG, PNG, WebP, GIF, AVIF · large images are resized to 1920px")}</span>
             </>
           ) : (
             <div className="w-full">
-              <div className="mb-2 text-slate-300">Uploading… {Math.round(progress * 100)}%</div>
+              <div className="mb-2 text-slate-300">{adminText("Uploading…")}{" "}{Math.round(progress * 100)}%</div>
               <div className="h-2 overflow-hidden rounded-full bg-white/10">
                 <div className="h-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all" style={{ width: `${progress * 100}%` }} />
               </div>
@@ -247,14 +251,12 @@ export function ImagePicker({
               className="btn btn-primary shrink-0"
               disabled={!url || !!urlError || (!!currentUrl && url.trim() === currentUrl)}
               onClick={() => onPick(urlRef(url.trim()))}
-            >
-              Use URL
-            </button>
+            >{adminText("Use URL")}</button>
           </div>
-          {currentUrl && url.trim() === currentUrl && <p className="mt-2 text-xs text-brand-300">This is the URL currently used by this field.</p>}
+          {currentUrl && url.trim() === currentUrl && <p className="mt-2 text-xs text-brand-300">{adminText("This is the URL currently used by this field.")}</p>}
           {urlError && <p className="mt-2 text-xs text-red-300">{urlError}</p>}
           {!urlError && url && <UrlPreview url={url.trim()} />}
-          <p className="mt-2 text-xs text-slate-500">The image is loaded directly from this address in visitors' browsers.</p>
+          <p className="mt-2 text-xs text-slate-500">{adminText("The image is loaded directly from this address in visitors' browsers.")}</p>
           <UsedUrlList selected={url} exclude={exclude} onSelect={(u) => (u === currentUrl ? setUrl(u) : onPick(urlRef(u)))} />
         </div>
       )}
@@ -262,9 +264,9 @@ export function ImagePicker({
       {tab === "library" && (
         <div className="max-h-64 overflow-y-auto scrollbar-thin">
           {!library.images ? (
-            <p className="p-4 text-center text-sm text-slate-400">Loading…</p>
+            <p className="p-4 text-center text-sm text-slate-400">{adminText("Loading…")}</p>
           ) : library.images.length === 0 ? (
-            <p className="p-4 text-center text-sm text-slate-400">No uploaded images yet.</p>
+            <p className="p-4 text-center text-sm text-slate-400">{adminText("No uploaded images yet.")}</p>
           ) : (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {library.images.map((img) => (
@@ -288,9 +290,7 @@ export function ImagePicker({
 
       {onCancel && (
         <div className="mt-3 text-right">
-          <button type="button" className="text-xs font-semibold text-slate-400 hover:text-white" onClick={onCancel}>
-            Cancel
-          </button>
+          <button type="button" className="text-xs font-semibold text-slate-400 hover:text-white" onClick={onCancel}>{adminText("Cancel")}</button>
         </div>
       )}
     </div>
@@ -313,6 +313,7 @@ export function ImageInput({
   aspect?: string;
   urlOnly?: boolean;
 }) {
+  const { t: adminText } = useAdminLanguage();
   const [picking, setPicking] = useState(!value);
   useEffect(() => {
     if (!value) setPicking(true);
@@ -332,11 +333,9 @@ export function ImageInput({
             {describeRef(value)}
           </span>
           <div className="absolute right-2 top-2 flex gap-1">
-            <button type="button" className="btn btn-ghost px-2.5 py-1 text-xs" onClick={() => setPicking((p) => !p)}>
-              Change
-            </button>
+            <button type="button" className="btn btn-ghost px-2.5 py-1 text-xs" onClick={() => setPicking((p) => !p)}>{adminText("Change")}</button>
             {optional && (
-              <button type="button" className="btn btn-danger px-2 py-1 text-xs" onClick={() => onChange(undefined)} aria-label="Remove image">
+              <button type="button" className="btn btn-danger px-2 py-1 text-xs" onClick={() => onChange(undefined)} aria-label={adminText("Remove image")}>
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
@@ -360,6 +359,7 @@ export function ImageInput({
 
 /** Ordered list of images (e.g. a project gallery). */
 export function MultiImageInput({ label, value, onChange }: { label: string; value: ImageRef[]; onChange: (v: ImageRef[]) => void }) {
+  const { t: adminText } = useAdminLanguage();
   const [adding, setAdding] = useState(value.length === 0);
   const move = (i: number, d: number) => {
     const next = [...value];
@@ -374,16 +374,16 @@ export function MultiImageInput({ label, value, onChange }: { label: string; val
         {value.map((ref, i) => (
           <div key={i} className="group relative overflow-hidden rounded-xl border border-white/10">
             <SmartImage image={ref} className="aspect-[4/3] w-full object-cover" fallbackClassName="aspect-[4/3] w-full" />
-            {i === 0 && <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold text-ink-950">Cover</span>}
+            {i === 0 && <span className="absolute left-1.5 top-1.5 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold text-ink-950">{adminText("Cover")}</span>}
             <span className="absolute inset-x-0 bottom-0 truncate bg-black/60 px-2 py-1 text-[10px] text-slate-200">{describeRef(ref)}</span>
             <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition group-hover:opacity-100 focus-within:opacity-100">
-              <button type="button" disabled={i === 0} onClick={() => move(i, -1)} className="rounded-md bg-black/60 p-1 text-white disabled:opacity-30" aria-label="Move earlier">
+              <button type="button" disabled={i === 0} onClick={() => move(i, -1)} className="rounded-md bg-black/60 p-1 text-white disabled:opacity-30" aria-label={adminText("Move earlier")}>
                 <ArrowUp className="h-3.5 w-3.5" />
               </button>
-              <button type="button" disabled={i === value.length - 1} onClick={() => move(i, 1)} className="rounded-md bg-black/60 p-1 text-white disabled:opacity-30" aria-label="Move later">
+              <button type="button" disabled={i === value.length - 1} onClick={() => move(i, 1)} className="rounded-md bg-black/60 p-1 text-white disabled:opacity-30" aria-label={adminText("Move later")}>
                 <ArrowDown className="h-3.5 w-3.5" />
               </button>
-              <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="rounded-md bg-red-600/80 p-1 text-white" aria-label="Remove">
+              <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="rounded-md bg-red-600/80 p-1 text-white" aria-label={adminText("Remove")}>
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -395,8 +395,7 @@ export function MultiImageInput({ label, value, onChange }: { label: string; val
             onClick={() => setAdding(true)}
             className="flex aspect-[4/3] flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-white/15 text-sm text-slate-400 hover:border-brand-400 hover:text-brand-300"
           >
-            <Plus className="h-6 w-6" /> Add image
-          </button>
+            <Plus className="h-6 w-6" />{adminText("Add image")}</button>
         )}
       </div>
       {adding && (
