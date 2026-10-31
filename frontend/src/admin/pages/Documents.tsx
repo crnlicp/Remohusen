@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Archive, Download, Eye, FileText, Link2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Archive, Download, Eye, FileText, Link2, Pencil, Plus, Trash2 } from "lucide-react";
 import { backend, unwrap, type BusinessDocument, type DocumentInput, type DocumentLine, type DocumentSettings, type DocumentSummary } from "../../lib/api";
-import { calculateTotals, decimal, defaultDocumentSettings, documentKinds, downloadBlob, isDocumentKind, isInvoice, joinPdf, kindLabel, money, newInput, newLine, paidOre, retentionDate, sampleDocument, scaled, serialise, sha256, today } from "../../lib/documents";
+import { calculateTotals, decimal, defaultDocumentSettings, documentKinds, downloadBlob, isDocumentKind, isInvoice, kindLabel, money, newInput, newLine, paidOre, retentionDate, sampleDocument, scaled, serialise, today } from "../../lib/documents";
 import { focusInvalidField, validDocumentDate, validateDocument, validateDocumentSettings, type FieldErrors } from "../../lib/documentValidation";
 import { useAdmin } from "../auth";
 import { Card, Field, PageHeader, TextInput, useToast } from "../components/ui";
@@ -52,7 +52,7 @@ export default function DocumentsPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [shareUrl, setShareUrl] = useState("");
-  const [preview, setPreview] = useState<{ url: string; blob: Blob; filename: string; sample: boolean; downloadable: boolean } | null>(null);
+  const [preview, setPreview] = useState<{ url: string; blob: Blob; filename: string; sample: boolean } | null>(null);
   const [payment, setPayment] = useState({ date: today(), amountOre: 0n, reference: "" });
   const [archiveReference, setArchiveReference] = useState("");
   const [einvoiceReference, setEinvoiceReference] = useState("");
@@ -133,10 +133,9 @@ export default function DocumentsPage() {
   }
   async function showPreview(d: BusinessDocument, sample = false) {
     const blob = await pdfBlob(d);
-    setPreview({ url: URL.createObjectURL(blob), blob, filename: `${d.number || "DRAFT"}-${d.input.kind}.pdf`, sample, downloadable: sample || d.issuedAt === undefined || d.pdfReady });
+    setPreview({ url: URL.createObjectURL(blob), blob, filename: `${d.number || "DRAFT"}-${d.input.kind}.pdf`, sample });
   }
   async function downloadDocument(d: BusinessDocument) {
-    if (d.issuedAt !== undefined && !d.pdfReady) throw new Error(adminText("Finalise the PDF before downloading the issued document."));
     downloadBlob(await pdfBlob(d), `${d.number || "DRAFT"}-${d.input.kind}.pdf`);
   }
   function deleteDraft(id: bigint) {
@@ -159,21 +158,7 @@ export default function DocumentsPage() {
     select(saved); await loadRows(); return saved;
   }
   async function pdfBlob(d: BusinessDocument) {
-    if (d.pdfReady) return joinPdf(d.pdfChunks, (index) => call(async (t) => unwrap(await backend.adminDocumentPdfChunk(t, d.id, index))), d.pdfHash);
     return renderDocumentPdf(d);
-  }
-  async function finalise(d: BusinessDocument) {
-    const blob = await pdfBlob(d);
-    const bytes = new Uint8Array(await blob.arrayBuffer());
-    if (bytes.length > 4_000_000) throw new Error(adminText("PDF exceeds 4 MB"));
-    await call(async (t) => unwrap(await backend.adminResetDocumentPdf(t, d.id)));
-    for (let offset = 0; offset < bytes.length; offset += 200_000) {
-      await call(async (t) => unwrap(await backend.adminUploadDocumentPdf(t, d.id, BigInt(offset / 200_000), bytes.slice(offset, offset + 200_000))));
-    }
-    const hash = await sha256(bytes);
-    const updated = await call(async (t) => unwrap(await backend.adminFinaliseDocumentPdf(t, d.id, hash)));
-    select(updated); await loadRows();
-    toast.ok(adminText("PDF finalised. Export to your accounting archive."));
   }
   function displayDocument(): BusinessDocument {
     if (!settings || !input) throw new Error(adminText("Choose a document"));
@@ -185,7 +170,7 @@ export default function DocumentsPage() {
   const locked = doc?.issuedAt !== undefined;
   const visible = rows.filter((r) => `${r.customerName} ${r.number} ${r.title} ${r.issueDate}`.toLowerCase().includes(search.toLowerCase()) &&
     (filter === "all" || filter === r.kind) && (status === "all" || status === "draft" && !r.issued || status === "issued" && r.issued ||
-      status === "pending" && r.issued && !r.pdfReady || status === "unarchived" && r.issued && !r.archived));
+      status === "unarchived" && r.issued && !r.archived));
   const field = (name: string) => ({ name, error: fieldErrors[name] ? adminText(fieldErrors[name]) : undefined });
   const clearFieldError = (target: EventTarget) => {
     if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) {
@@ -207,12 +192,12 @@ export default function DocumentsPage() {
     {!locked && <><button disabled={busy} className="btn btn-primary" onClick={() => void run(async () => { await saveDraft(); select(null); toast.ok(adminText("Draft saved")); })}>{adminText("Save draft")}</button>
       <button disabled={busy} className="btn btn-primary" onClick={() => void run(async () => {
         validate(true);
-        if (!window.confirm(adminText("Issue and permanently lock this document? Invoice numbers cannot be reused. Export the final PDF to your accounting archive."))) return;
-        const saved = await saveDraft(); const issued = await call(async (t) => unwrap(await backend.adminIssueDocument(t, saved.id, saved.revision))); select(issued); await finalise(issued);
-      })}>{adminText("Issue & finalise PDF")}</button></>}
-    {locked && doc && !doc.pdfReady && <button disabled={busy} className="btn btn-primary" onClick={() => void run(() => finalise(doc))}>{adminText("Retry pending PDF finalisation")}</button>}
+        if (!window.confirm(adminText("Issue and permanently lock this document? Invoice numbers cannot be reused. The PDF will be generated from the frozen issue-time details whenever previewed or downloaded."))) return;
+        const saved = await saveDraft(); const issued = await call(async (t) => unwrap(await backend.adminIssueDocument(t, saved.id, saved.revision)));
+        select(issued); await loadRows(); toast.ok(adminText("Document issued. Its PDF will be generated when previewed or downloaded."));
+      })}>{adminText("Issue document")}</button></>}
     <button disabled={busy} className="btn btn-ghost" onClick={() => void run(async () => { if (!locked) validate(); await showPreview(displayDocument()); })}><Eye className="h-4 w-4" />{adminText("Preview PDF")}</button>
-    <button disabled={busy || locked && !doc?.pdfReady} className="btn btn-ghost" onClick={() => void run(async () => { if (!locked) validate(); await downloadDocument(displayDocument()); })}><Download className="h-4 w-4" />{adminText(locked ? "Download PDF" : "Download draft PDF")}</button>
+    <button disabled={busy} className="btn btn-ghost" onClick={() => void run(async () => { if (!locked) validate(); await downloadDocument(displayDocument()); })}><Download className="h-4 w-4" />{adminText(locked ? "Download PDF" : "Download draft PDF")}</button>
     <button className="btn btn-ghost" disabled={busy} onClick={closeEditor}>{adminText("Close")}</button>
   </>;
   return <>
@@ -230,11 +215,11 @@ export default function DocumentsPage() {
     {tab === "documents" && <div className="space-y-5">
       <details className="glass rounded-2xl p-4 text-sm text-slate-300">
         <summary className="cursor-pointer font-semibold text-brand-300">{adminText("How documents work")}</summary>
-        <p className="my-4">{adminText("Saved drafts and issued PDFs are stored in the application's backend canister, not in this browser. Open a row to continue editing or download it. Your accounting service remains the legal archive.")}</p>
+        <p className="my-4">{adminText("Drafts and frozen issued-document details are stored in the backend canister. PDFs are generated on demand in this browser; issued PDFs use the content and branding saved at issue time. Save issued PDFs to your accounting archive.")}</p>
         <ol className="mb-5 grid gap-3 text-sm text-slate-300 md:grid-cols-3">
           <li>{adminText("1. Create a document or open a saved draft.")}</li>
           <li>{adminText("2. Enter details, preview the PDF and save your draft.")}</li>
-          <li>{adminText("3. Issue to lock it, then download or share the final PDF.")}</li>
+          <li>{adminText("3. Issue to lock the document, then preview, download or share its generated PDF.")}</li>
         </ol>
         <div className="flex flex-wrap gap-3">
           <button disabled={busy} className="btn btn-ghost" onClick={() => void run(() => showPreview(sampleDocument(settings, language), true))}><Eye className="h-4 w-4" />{adminText("Preview sample PDF")}</button>
@@ -246,7 +231,7 @@ export default function DocumentsPage() {
         <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
           <TextInput label={adminText("Search this page")} placeholder={adminText("Customer, document number, title or date…")} value={search} onChange={setSearch} />
           <Choice label={adminText("Document type")} value={filter} options={[["all", adminText("All")], ...Object.keys(documentKinds).map((k): [string, string] => [k, kindLabel(k, language)])]} onChange={setFilter} />
-          <Choice label={adminText("Status")} value={status} options={[["all", adminText("All")], ["draft", adminText("Draft")], ["issued", adminText("Issued")], ["pending", adminText("PDF pending")], ["unarchived", adminText("Issued, archive pending")]]} onChange={setStatus} />
+          <Choice label={adminText("Status")} value={status} options={[["all", adminText("All")], ["draft", adminText("Draft")], ["issued", adminText("Issued")], ["unarchived", adminText("Issued, archive pending")]]} onChange={setStatus} />
         </div>
       </Card>
       {visible.length ? <ul className="space-y-3" aria-label={adminText("Saved documents")}>
@@ -254,20 +239,16 @@ export default function DocumentsPage() {
           title: `${row.number || `${adminText("Draft")} #${row.id}`} · ${row.title}`,
           subtitle: `${row.customerName} · ${row.issueDate} · ID ${row.id}`,
           icon: <FileText className="h-7 w-7" />,
-          badges: [{ text: kindLabel(row.kind, language) }, { text: row.issued ? row.pdfReady ? adminText("Issued") : adminText("PDF pending") : adminText("Draft"), tone: row.issued && row.pdfReady ? "green" : "amber" },
+          badges: [{ text: kindLabel(row.kind, language) }, { text: row.issued ? adminText("Issued") : adminText("Draft"), tone: row.issued ? "green" : "amber" },
             ...(row.issued && !row.archived ? [{ text: adminText("Issued, archive pending"), tone: "amber" as const }] : [])],
         }} actions={<>
           <button disabled={busy} className="btn btn-ghost px-3" aria-label={adminText(row.issued ? "View document" : "Edit")} title={adminText(row.issued ? "View document" : "Edit")} onClick={() => openDocument(row.id)}>{row.issued ? <FileText className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}</button>
           <button disabled={busy} className="btn btn-ghost px-3" aria-label={adminText("Preview PDF")} title={adminText("Preview PDF")} onClick={() => void run(async () => showPreview(await call(async (t) => unwrap(await backend.adminGetDocument(t, row.id)))))}><Eye className="h-4 w-4" /></button>
-          <button disabled={busy || row.issued && !row.pdfReady} className="btn btn-ghost px-3" aria-label={adminText(row.issued ? "Download PDF" : "Download draft PDF")} title={adminText(row.issued && !row.pdfReady ? "Finalise the PDF before downloading the issued document." : "Download PDF")} onClick={() => void run(async () => downloadDocument(await call(async (t) => unwrap(await backend.adminGetDocument(t, row.id)))))}><Download className="h-4 w-4" /></button>
-          {row.issued && row.pdfReady && <>
+          <button disabled={busy} className="btn btn-ghost px-3" aria-label={adminText(row.issued ? "Download PDF" : "Download draft PDF")} title={adminText("Download PDF")} onClick={() => void run(async () => downloadDocument(await call(async (t) => unwrap(await backend.adminGetDocument(t, row.id)))))}><Download className="h-4 w-4" /></button>
+          {row.issued && <>
             <button disabled={busy} className="btn btn-ghost px-3" aria-label={adminText("Sharing and payments")} title={adminText("Sharing and payments")} onClick={() => openDocument(row.id, true)}><Link2 className="h-4 w-4" /></button>
             <button disabled={busy} className="btn btn-ghost px-3" aria-label={adminText("Export PDF + archive record")} title={adminText("Export PDF + archive record")} onClick={() => void run(async () => exportArchive(await call(async (t) => unwrap(await backend.adminGetDocument(t, row.id)))))}><Archive className="h-4 w-4" /></button>
           </>}
-          {row.issued && !row.pdfReady && <button disabled={busy} className="btn btn-ghost px-3" aria-label={adminText("Retry pending PDF finalisation")} title={adminText("Retry pending PDF finalisation")} onClick={() => void run(async () => {
-            const d = await call(async (t) => unwrap(await backend.adminGetDocument(t, row.id)));
-            select(d); if (!d.pdfReady) await finalise(d); else await loadRows();
-          })}><RefreshCw className="h-4 w-4" /></button>}
           <button disabled={busy || row.issued} className="btn btn-danger px-3" aria-label={adminText(row.issued ? "Issued documents cannot be deleted" : "Delete draft")} title={adminText(row.issued ? "Issued documents cannot be deleted" : "Delete draft")} onClick={() => deleteDraft(row.id)}><Trash2 className="h-4 w-4" /></button>
         </>} />)}
       </ul> : <div className="glass rounded-2xl p-10 text-center text-slate-400">{adminText(rows.length ? "No matching documents on this page." : "No documents yet. Create the first one.")}</div>}
@@ -279,7 +260,7 @@ export default function DocumentsPage() {
       initialFocus={showDelivery ? shareButton : undefined} title={locked ? `${doc?.number} · ${input?.title}` : adminText(doc ? "Edit document" : "New document")} footer={editorActions}>
       {error && <p role="alert" className="rounded-lg bg-red-500/15 p-3 text-sm text-red-200">{adminText(error)}</p>}
       {input && <div ref={editor} id="document-editor" onInput={(e) => clearFieldError(e.target)}>
-        <p className="mb-5 text-xs text-slate-400">{locked ? adminText("Issued documents are locked. Download or share the final PDF below.") : doc ? adminText("Saved draft — changes must be saved.") : adminText("Unsaved draft — not yet in the document list.")}</p>
+        <p className="mb-5 text-xs text-slate-400">{locked ? adminText("Issued documents are locked. Download or share the generated PDF below.") : doc ? adminText("Saved draft — changes must be saved.") : adminText("Unsaved draft — not yet in the document list.")}</p>
         <fieldset key={editorSession} disabled={busy || locked} className="space-y-4 disabled:opacity-70">
           <div className="grid gap-4 sm:grid-cols-2">
             <Choice label={adminText("Document type")} value={input.kind} options={Object.keys(documentKinds).map((k) => [k, kindLabel(k, language)])} onChange={(kind) => {
@@ -324,16 +305,16 @@ export default function DocumentsPage() {
         </fieldset>
       </div>}
       {doc && locked && <div ref={delivery} onInput={(e) => clearFieldError(e.target)}><Card title={adminText("Delivery, payment and external evidence")}>
-        <p className="break-all text-sm text-slate-400">{adminText("Final PDF SHA-256:")}{" "}{doc.pdfHash || "pending"}</p>
+        <p className="text-sm text-slate-400">{adminText("PDFs are generated on demand from the frozen issue-time document and branding. Save each issued PDF to your accounting archive.")}</p>
         {doc.input.customerType === "public" && <p className="mt-3 text-amber-200">{adminText("Structured e-invoice required. Use your accounting service; PDF sharing is not delivery of the legal e-invoice.")}</p>}
         <div className="mt-4 flex flex-wrap gap-2">
-          <button ref={shareButton} disabled={busy || !doc.pdfReady} className="btn btn-primary" onClick={() => void run(async () => {
+          <button ref={shareButton} disabled={busy} className="btn btn-primary" onClick={() => void run(async () => {
             const shared = await call(async (t) => unwrap(await backend.adminShareDocument(t, doc.id)));
             setShareUrl(`${window.location.origin}/documents#${shared.token}`);
             toast.ok(adminText("New bearer link created for 30 days; previous link revoked."));
           })}>{adminText("Create / rotate 30-day link")}</button>
           <button disabled={busy} className="btn btn-ghost" onClick={() => void run(async () => { unwrap(await call((t) => backend.adminRevokeDocumentShare(t, doc.id))); setShareUrl(""); await reloadDoc(doc.id); toast.ok(adminText("Link revoked; downloaded copies cannot be recalled.")); })}>{adminText("Revoke link")}</button>
-          <button disabled={busy || !doc.pdfReady} className="btn btn-ghost" onClick={() => void run(() => exportArchive(doc))}>{adminText("Export PDF + archive record")}</button>
+          <button disabled={busy} className="btn btn-ghost" onClick={() => void run(() => exportArchive(doc))}>{adminText("Export PDF + archive record")}</button>
           <button disabled={busy} className="btn btn-ghost" onClick={() => select(null, { ...doc.input, kind: "invoice", title: kindLabel("invoice", doc.input.language), sourceId: doc.id, issueDate: today(), dueDate: newInput(settings).dueDate, rotOre: 0n, rotConfirmed: false, internalNotes: "" })}>{adminText("Copy to new invoice")}</button>
           <button disabled={busy} className="btn btn-ghost" onClick={() => select(null, { ...doc.input, kind: "order", title: kindLabel("order", doc.input.language), sourceId: doc.id, issueDate: today(), dueDate: newInput(settings).dueDate, rotOre: 0n, rotConfirmed: false, internalNotes: "" })}>{adminText("Copy to order confirmation")}</button>
           <button disabled={busy} className="btn btn-ghost" onClick={() => select(null, { ...doc.input, kind: "credit", title: kindLabel("credit", doc.input.language), sourceId: doc.id, rotOre: 0n, issueDate: today(), internalNotes: "" })}>{adminText("Create linked credit")}</button>
@@ -369,10 +350,10 @@ export default function DocumentsPage() {
       </Card></div>}
     </CollectionDrawer>
     <CollectionDrawer open={!!preview} title={adminText(preview?.sample ? "Sample PDF preview" : "Document PDF preview")} onClose={() => setPreview(null)} footer={<>
-      <button className="btn btn-primary" disabled={!preview?.downloadable} onClick={() => { if (preview?.downloadable) downloadBlob(preview.blob, preview.filename); }}><Download className="h-4 w-4" />{adminText("Download PDF")}</button>
+      <button className="btn btn-primary" disabled={!preview} onClick={() => { if (preview) downloadBlob(preview.blob, preview.filename); }}><Download className="h-4 w-4" />{adminText("Download PDF")}</button>
       <button className="btn btn-ghost" onClick={() => setPreview(null)}>{adminText("Close")}</button>
     </>}>
-      {preview && <><p className="break-all text-sm text-slate-400">{preview.filename}</p>{!preview.downloadable && <p className="text-sm text-amber-200">{adminText("Finalise the PDF before downloading the issued document.")}</p>}<iframe className="h-[650px] w-full rounded-xl bg-white" src={preview.url} title={adminText(preview.sample ? "Sample PDF preview" : "Document PDF preview")} /></>}
+      {preview && <><p className="break-all text-sm text-slate-400">{preview.filename}</p><iframe className="h-[650px] w-full rounded-xl bg-white" src={preview.url} title={adminText(preview.sample ? "Sample PDF preview" : "Document PDF preview")} /></>}
     </CollectionDrawer>
   </>;
 }

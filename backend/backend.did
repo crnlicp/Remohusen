@@ -44,14 +44,38 @@ type SiteContent =
    slides: vec Slide;
    testimonials: vec Testimonial;
  };
+type SharedDocumentInput =
+ record {
+   customerAddress: text;
+   customerName: text;
+   customerType: text;
+   customerVat: text;
+   dueDate: text;
+   issueDate: text;
+   kind: text;
+   language: text;
+   lines: vec DocumentLine;
+   notes: text;
+   project: text;
+   rotOre: nat;
+   sourceId: opt nat;
+   supplyDate: text;
+   terms: text;
+   title: text;
+ };
 type SharedDocumentInfo =
  record {
+   brand: DocumentBrand;
    chunks: nat;
    expiresAt: int;
    hash: text;
+   input: SharedDocumentInput;
+   issuedAt: int;
    language: text;
    number: text;
+   sourceNumber: text;
    title: text;
+   totals: DocumentTotals;
  };
 type Settings = 
  record {

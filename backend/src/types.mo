@@ -59,8 +59,16 @@ module {
     issued : Bool; pdfReady : Bool; archived : Bool;
   };
   public type DocumentShare = { documentId : Nat; expiresAt : Int };
+  public type SharedDocumentInput = {
+    kind : Text; language : Text; title : Text;
+    customerName : Text; customerAddress : Text; customerVat : Text; customerType : Text;
+    project : Text; issueDate : Text; supplyDate : Text; dueDate : Text;
+    terms : Text; notes : Text; lines : [DocumentLine]; sourceId : ?Nat; rotOre : Nat;
+  };
   public type SharedDocumentInfo = {
-    number : Text; title : Text; language : Text; hash : Text; chunks : Nat; expiresAt : Int;
+    input : SharedDocumentInput; brand : DocumentBrand; totals : DocumentTotals;
+    number : Text; sourceNumber : Text; issuedAt : Int; expiresAt : Int;
+    hash : Text; chunks : Nat; title : Text; language : Text;
   };
   public type DocumentState = {
     var settings : ?DocumentSettings;

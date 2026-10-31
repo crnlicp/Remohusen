@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateTotals, decimal, joinPdf, lineAmounts, money, retentionDate, scaled, sha256 } from "../src/lib/documents";
+import { calculateTotals, decimal, lineAmounts, money, retentionDate, scaled } from "../src/lib/documents";
 import { input } from "./fixtures";
 
 describe("exact SEK calculations", () => {
@@ -22,13 +22,5 @@ describe("exact SEK calculations", () => {
     expect(scaled("123,45")).toBe(12345n); expect(scaled("1.234", 3)).toBe(1234n);
     expect(decimal(1n)).toBe("0.01"); expect(money(-12345n, "en")).toBe("-123.45 SEK");
     expect(retentionDate("2026-06-30")).toBe("2033-12-31");
-  });
-  it("verifies the exact downloaded PDF bytes", async () => {
-    const bytes = new TextEncoder().encode("%PDF-synthetic");
-    const hash = await sha256(bytes);
-    const blob = await joinPdf(1n, async () => bytes, hash);
-    expect(await blob.text()).toBe("%PDF-synthetic");
-    await expect(joinPdf(1n, async () => bytes, "bad")).rejects.toThrow("integrity");
-    await expect(joinPdf(21n, async () => bytes, hash)).rejects.toThrow("count");
   });
 });

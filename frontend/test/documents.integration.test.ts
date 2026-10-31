@@ -12,7 +12,7 @@ function ok<T>(value: Result<T>): T {
 }
 
 describe.skipIf(!process.env.DOCUMENT_TEST_CANISTER)("isolated local document API", () => {
-  it("preserves numbering, immutability, access controls, payments, credits and PDFs across upgrades", async () => {
+  it("preserves issued snapshots, safe on-demand sharing, numbering and payments across upgrades", async () => {
     const id = process.env.DOCUMENT_TEST_CANISTER!;
     const agent = await HttpAgent.create({ host: "http://localhost:8010" });
     await agent.fetchRootKey();
@@ -28,32 +28,31 @@ describe.skipIf(!process.env.DOCUMENT_TEST_CANISTER)("isolated local document AP
     ok(await api.adminSaveDocumentSettings(token, settings));
     const first = ok(await api.adminSaveDocument(token, 0n, 0n, input));
     expect(first.input.internalNotes).toContain("PRIVATE-NOTES");
+    expect((await api.adminShareDocument(token, first.id)).__kind__).toBe("err");
     const [issued, retried] = await Promise.all([api.adminIssueDocument(token, first.id, first.revision), api.adminIssueDocument(token, first.id, first.revision)]);
-    expect(ok(issued).number).toBe("TEST-1"); expect(ok(retried).number).toBe("TEST-1");
+    const issuedDocument = ok(issued);
+    expect(issuedDocument.number).toBe("TEST-1");
+    expect(issuedDocument.pdfReady).toBe(true);
+    expect(issuedDocument.pdfHash).toBe("");
+    expect(issuedDocument.pdfChunks).toBe(0n);
+    expect(ok(retried).number).toBe("TEST-1");
     expect((await api.adminSaveDocument(token, first.id, first.revision, { ...input, title: "Changed" })).__kind__).toBe("err");
     expect((await api.adminDeleteDocumentDraft(token, first.id)).__kind__).toBe("err");
-    expect((await api.adminShareDocument(token, first.id)).__kind__).toBe("err");
     const second = ok(await api.adminSaveDocument(token, 0n, 0n, input));
     expect(ok(await api.adminIssueDocument(token, second.id, second.revision)).number).toBe("TEST-2");
-    const bytes = new TextEncoder().encode("%PDF-synthetic-integrity-fixture");
-    ok(await api.adminUploadDocumentPdf(token, first.id, 0n, bytes));
-    ok(await api.adminUploadDocumentPdf(token, first.id, 0n, bytes));
-    expect((await api.adminFinaliseDocumentPdf(token, first.id, "wrong")).__kind__).toBe("err");
-    const hash = Buffer.from(await crypto.subtle.digest("SHA-256", bytes)).toString("hex");
-    ok(await api.adminFinaliseDocumentPdf(token, first.id, hash));
-    expect((await api.adminResetDocumentPdf(token, first.id)).__kind__).toBe("err");
     const share = ok(await api.adminShareDocument(token, first.id));
     const meta = ok(await api.getSharedDocument(share.token));
-    expect(meta.hash).toBe(hash);
-    expect(Object.keys(meta)).not.toContain("input");
-    expect(Buffer.from(ok(await api.getSharedDocumentPdfChunk(share.token, 0n)))).toEqual(Buffer.from(bytes));
-    expect((await api.getSharedDocumentPdfChunk(share.token, 1n)).__kind__).toBe("err");
+    expect(meta.number).toBe("TEST-1");
+    expect(meta.input.customerName).toBe(input.customerName);
+    expect(meta.brand).toEqual(settings.brand);
+    expect(Object.keys(meta.input)).not.toContain("internalNotes");
+    expect("payments" in meta).toBe(false);
+    expect("events" in meta).toBe(false);
     expect((await api.getSharedDocument("f".repeat(64))).__kind__).toBe("err");
-    expect((await api.adminDocumentPdfChunk("wrong", first.id, 0n)).__kind__).toBe("err");
     const rotated = ok(await api.adminShareDocument(token, first.id));
     expect((await api.getSharedDocument(share.token)).__kind__).toBe("err");
     ok(await api.adminRevokeDocumentShare(token, first.id));
-    expect((await api.getSharedDocumentPdfChunk(rotated.token, 0n)).__kind__).toBe("err");
+    expect((await api.getSharedDocument(rotated.token)).__kind__).toBe("err");
     const before = ok(await api.adminGetDocument(token, first.id));
     ok(await api.adminSaveDocumentSettings(token, { ...settings, brand: { ...settings.brand, legalName: "Changed future branding" } }));
     expect(ok(await api.adminGetDocument(token, first.id)).brand).toEqual(before.brand);
@@ -75,7 +74,7 @@ describe.skipIf(!process.env.DOCUMENT_TEST_CANISTER)("isolated local document AP
     if (!wasm) throw new Error("Set DOCUMENT_TEST_WASM to verify upgrades");
     execFileSync("icp", ["canister", "install", id, "--wasm", resolve(wasm), "--mode", "upgrade", "--identity", "anonymous", "-e", "local", "--yes"], { cwd: "..", stdio: "pipe" });
     expect(ok(await api.adminGetDocument(token, first.id))).toEqual(stableDoc);
-    expect(ok(await api.getSharedDocument(liveShare.token)).hash).toBe(hash);
+    expect(ok(await api.getSharedDocument(liveShare.token)).brand).toEqual(before.brand);
     expect(await api.getSiteContent()).toEqual(site);
     const third = ok(await api.adminSaveDocument(token, 0n, 0n, input));
     expect(ok(await api.adminIssueDocument(token, third.id, third.revision)).number).toBe("TEST-4");

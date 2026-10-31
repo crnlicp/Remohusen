@@ -106,22 +106,3 @@ export function downloadBlob(blob: Blob, name: string) {
   anchor.href = url; anchor.download = name; anchor.click();
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
-export async function sha256(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
-  return [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-export async function joinPdf(count: bigint, fetchChunk: (index: bigint) => Promise<Uint8Array | number[]>, expectedHash: string): Promise<Blob> {
-  if (count < 1n || count > 20n) throw new Error("Invalid PDF chunk count");
-  const chunks: Uint8Array<ArrayBuffer>[] = [];
-  let size = 0;
-  for (let i = 0n; i < count; i++) {
-    const chunk = new Uint8Array(await fetchChunk(i));
-    size += chunk.length;
-    if (size > 4_000_000) throw new Error("PDF exceeds size limit");
-    chunks.push(chunk);
-  }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
-  if (await sha256(bytes) !== expectedHash) throw new Error("PDF integrity check failed");
-  return new Blob([bytes], { type: "application/pdf" });
-}

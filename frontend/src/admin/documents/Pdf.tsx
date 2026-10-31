@@ -2,7 +2,7 @@ import { Document, Font, Image, Page, StyleSheet, Text, View, pdf } from "@react
 import regular from "@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff?inline";
 import bold from "@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff?inline";
 import defaultLogo from "../../../public/logo-192.png?inline";
-import type { BusinessDocument, DocumentBrand } from "../../lib/api";
+import type { DocumentBrand, DocumentInput, DocumentTotals } from "../../lib/api";
 import { kindLabel, lineAmounts, money, decimal } from "../../lib/documents";
 import { documentLetterhead, LETTERHEAD_FIT_ERROR } from "../../lib/documentLetterhead";
 
@@ -48,6 +48,14 @@ const styles = StyleSheet.create({
   warning: { color: "#9a3412", marginBottom: 12 },
   draft: { alignSelf: "flex-start", fontSize: 8.5, fontWeight: 700, color: "#9a3412", backgroundColor: "#fff1df", paddingVertical: 5, paddingHorizontal: 8, borderRadius: 3, marginBottom: 12 },
 });
+type PdfDocument = {
+  input: Omit<DocumentInput, "internalNotes" | "reverseChargeConfirmed" | "rotConfirmed">;
+  brand: DocumentBrand;
+  totals: DocumentTotals;
+  number: string;
+  sourceNumber: string;
+  issuedAt?: bigint;
+};
 export function PdfFrame({ brand, en, children }: { brand: DocumentBrand; en: boolean; children: React.ReactNode }) {
   const { company, tagline, address, contact, registration, footerNote, paddingTop, paddingBottom, fits } = documentLetterhead(brand, en);
   if (!fits) throw new Error(LETTERHEAD_FIT_ERROR);
@@ -80,7 +88,7 @@ export function PdfFrame({ brand, en, children }: { brand: DocumentBrand; en: bo
     </View>
   </Page>;
 }
-export function BusinessPdf({ doc }: { doc: BusinessDocument }) {
+export function BusinessPdf({ doc }: { doc: PdfDocument }) {
   const d = doc.input, en = d.language === "en";
   const t = (sv: string, english: string) => en ? english : sv;
   const groups = new Map<string, { base: bigint; vat: bigint; text: string }>();
@@ -140,7 +148,7 @@ export function BusinessPdf({ doc }: { doc: BusinessDocument }) {
     </PdfFrame>
   </Document>;
 }
-export async function renderDocumentPdf(doc: BusinessDocument): Promise<Blob> {
+export async function renderDocumentPdf(doc: PdfDocument): Promise<Blob> {
   if (!documentLetterhead(doc.brand, doc.input.language === "en").fits) throw new Error(LETTERHEAD_FIT_ERROR);
   return pdf(<BusinessPdf doc={doc} />).toBlob();
 }

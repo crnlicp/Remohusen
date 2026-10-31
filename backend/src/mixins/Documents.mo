@@ -30,7 +30,7 @@ mixin (auth : Types.AuthState, documentState : Types.DocumentState) {
     let share = documentState.shares.get(hashToken(token)) ?? return null;
     if (not Docs.shareActive(share.expiresAt, Time.now())) return null;
     let doc = documentState.records.get(share.documentId) ?? return null;
-    if (not doc.pdfReady) return null;
+    if (doc.issuedAt == null) return null;
     ?(doc, share);
   };
 
@@ -62,7 +62,7 @@ mixin (auth : Types.AuthState, documentState : Types.DocumentState) {
         case (?d) rows := rows.concat([{
           id = d.id; kind = d.input.kind; title = d.input.title; number = d.number;
           customerName = d.input.customerName; issueDate = d.input.issueDate;
-          issued = d.issuedAt != null; pdfReady = d.pdfReady; archived = d.evidence.archiveReference != "";
+          issued = d.issuedAt != null; pdfReady = d.issuedAt != null; archived = d.evidence.archiveReference != "";
         }]);
         case null {};
       };
@@ -177,7 +177,8 @@ mixin (auth : Types.AuthState, documentState : Types.DocumentState) {
     } else { "DOC-" # id.toText() };
     let updated = {
       doc with number; sourceNumber; totals = issuedTotals; brand = settings.brand; issuedAt = ?Time.now(); revision = doc.revision + 1;
-      events = event(doc, "issued-pdf-pending", Docs.templateVersion);
+      pdfReady = true; pdfHash = ""; pdfChunks = 0;
+      events = event(doc, "issued", Docs.templateVersion);
     };
     documentState.records.add(id, updated);
     #ok updated;
@@ -185,55 +186,22 @@ mixin (auth : Types.AuthState, documentState : Types.DocumentState) {
 
   public shared func adminUploadDocumentPdf(token : Text, id : Nat, index : Nat, chunk : Blob) : async Result.Result<(), Text> {
     if (not auth.isAuthorized(token, Time.now())) return #err(AuthLib.unauthorized);
-    let doc = documentState.records.get(id) ?? return #err "Document not found";
-    if (doc.issuedAt == null or doc.pdfReady) return #err "Only pending issued PDFs can be uploaded";
-    if (chunk.size() == 0 or chunk.size() > 200_000) return #err "PDF chunk must be 1-200000 bytes";
-    let file = documentState.files.get(id) ?? ({ chunks = []; size = 0 } : Types.DocumentFile);
-    if (index < file.chunks.size()) {
-      if (file.chunks[index] == chunk) return #ok(());
-      return #err "Upload conflict; reset the pending PDF upload";
-    };
-    if (index != file.chunks.size()) return #err "PDF chunks must be uploaded in order";
-    if (file.size + chunk.size() > 4_000_000) return #err "PDF exceeds 4 MB";
-    documentState.files.add(id, { chunks = file.chunks.concat([chunk]); size = file.size + chunk.size() });
-    #ok(());
+    #err "PDF bytes are generated on demand and are not uploaded to the canister";
   };
 
   public shared func adminResetDocumentPdf(token : Text, id : Nat) : async Result.Result<(), Text> {
     if (not auth.isAuthorized(token, Time.now())) return #err(AuthLib.unauthorized);
-    let doc = documentState.records.get(id) ?? return #err "Document not found";
-    if (doc.pdfReady) return #err "Final PDFs are immutable";
-    documentState.files.remove(id);
-    #ok(());
+    #err "PDF bytes are generated on demand and are not stored in the canister";
   };
 
   public shared func adminFinaliseDocumentPdf(token : Text, id : Nat, expectedHash : Text) : async Result.Result<Types.BusinessDocument, Text> {
     if (not auth.isAuthorized(token, Time.now())) return #err(AuthLib.unauthorized);
-    let doc = documentState.records.get(id) ?? return #err "Document not found";
-    if (doc.pdfReady) {
-      if (doc.pdfHash != expectedHash) return #err "Document already has a different final PDF";
-      return #ok doc;
-    };
-    let file = documentState.files.get(id) ?? return #err "Upload a PDF first";
-    if (file.chunks.size() == 0 or file.chunks[0].size() < 5) return #err "Invalid PDF header";
-    let prefix = file.chunks[0].toArray();
-    if (prefix[0] != 37 or prefix[1] != 80 or prefix[2] != 68 or prefix[3] != 70 or prefix[4] != 45) return #err "Invalid PDF header";
-    let h = Sha256.new();
-    for (chunk in file.chunks.values()) h.writeBlob(chunk);
-    let hash = AuthLib.toHex(h.sum());
-    if (hash != expectedHash) return #err "PDF hash mismatch";
-    let updated = { doc with pdfReady = true; pdfHash = hash; pdfChunks = file.chunks.size(); events = event(doc, "pdf-finalised", hash) };
-    documentState.records.add(id, updated);
-    #ok updated;
+    #err "PDF bytes are generated on demand and are not finalised in the canister";
   };
 
   public query func adminDocumentPdfChunk(token : Text, id : Nat, index : Nat) : async Result.Result<Blob, Text> {
     if (not auth.isAuthorized(token, Time.now())) return #err(AuthLib.unauthorized);
-    let doc = documentState.records.get(id) ?? return #err "Document not found";
-    if (not doc.pdfReady) return #err "PDF finalisation is pending";
-    let file = documentState.files.get(id) ?? return #err "PDF not found";
-    if (index >= file.chunks.size()) return #err "PDF chunk not found";
-    #ok(file.chunks[index]);
+    #err "PDF bytes are generated on demand and are not stored in the canister";
   };
 
   public shared func adminShareDocument(token : Text, id : Nat) : async Result.Result<{ token : Text; expiresAt : Int }, Text> {
@@ -243,7 +211,7 @@ mixin (auth : Types.AuthState, documentState : Types.DocumentState) {
     let settings = documentState.settings ?? return #err "Document settings missing";
     if (not settings.privacyApproved) return #err "Privacy/storage approval is required";
     let doc = documentState.records.get(id) ?? return #err "Document not found";
-    if (not doc.pdfReady) return #err "Finalise the issued PDF before sharing";
+    if (doc.issuedAt == null) return #err "Issue the document before sharing";
     switch (doc.shareHash) { case (?old) documentState.shares.remove(old); case null {} };
     let tokenHash = hashToken(raw);
     let expiresAt = Time.now() + Docs.shareTtl;
@@ -262,14 +230,25 @@ mixin (auth : Types.AuthState, documentState : Types.DocumentState) {
 
   public query func getSharedDocument(token : Text) : async Result.Result<Types.SharedDocumentInfo, Text> {
     let (doc, share) = sharedRecord(token) ?? return #err "This link is invalid, revoked or expired";
-    #ok { number = doc.number; title = doc.input.title; language = doc.input.language; hash = doc.pdfHash; chunks = doc.pdfChunks; expiresAt = share.expiresAt };
+    let input = doc.input;
+    let issuedAt = doc.issuedAt ?? return #err "This link is invalid, revoked or expired";
+    #ok {
+      input = {
+        kind = input.kind; language = input.language; title = input.title;
+        customerName = input.customerName; customerAddress = input.customerAddress; customerVat = input.customerVat;
+        customerType = input.customerType; project = input.project; issueDate = input.issueDate;
+        supplyDate = input.supplyDate; dueDate = input.dueDate; terms = input.terms; notes = input.notes;
+        lines = input.lines; sourceId = input.sourceId; rotOre = input.rotOre;
+      };
+      brand = doc.brand; totals = doc.totals; number = doc.number; sourceNumber = doc.sourceNumber;
+      issuedAt; expiresAt = share.expiresAt; hash = ""; chunks = 0;
+      title = input.title; language = input.language;
+    };
   };
 
   public query func getSharedDocumentPdfChunk(token : Text, index : Nat) : async Result.Result<Blob, Text> {
-    let (doc, _) = sharedRecord(token) ?? return #err "This link is invalid, revoked or expired";
-    let file = documentState.files.get(doc.id) ?? return #err "PDF unavailable";
-    if (index >= file.chunks.size()) return #err "PDF chunk not found";
-    #ok(file.chunks[index]);
+    if (sharedRecord(token) == null) return #err "This link is invalid, revoked or expired";
+    #err "PDF bytes are generated on demand in the recipient's browser";
   };
 
   public shared func adminRecordDocumentPayment(token : Text, id : Nat, payment : Types.DocumentPayment) : async Result.Result<(), Text> {

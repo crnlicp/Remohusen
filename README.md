@@ -31,8 +31,7 @@ Then open:
 - Website: http://frontend.local.localhost:8010/
 - Admin panel: http://frontend.local.localhost:8010/admin
 
-> **Current local deployment:** the admin login is `admin` / `Remohusen123!`.
-> Change it right away under **Admin → Account**.
+> **Current local deployment:** use the credentials configured for your local environment. Change any bootstrap password right away under **Admin → Account**.
 
 ### Frontend development server
 
@@ -71,7 +70,7 @@ Open **Admin → Documents**. The four tabs are **Customer documents**, **Accoun
 **Setup**
 
 - Initial legal-name/contact/header/footer values come from Site settings and Contact. Save the private document settings separately: registered KB name, organisation/VAT numbers, F-tax status, payment instructions, optional custom PNG/JPEG logo, invoice prefix, reporting profile and existing accounting/archive service.
-- The letterhead uses the website's Remohusen logo and navy/amber colours by default. In Document settings, upload a PNG/JPEG to use a custom logo, or select **Use default logo** to restore the website logo. Changes apply to newly rendered PDFs; already finalised PDFs remain unchanged.
+- The letterhead uses the website's Remohusen logo and navy/amber colours by default. In Document settings, upload a PNG/JPEG to use a custom logo, or select **Use default logo** to restore the website logo. New documents use current settings; issued documents retain their issue-time content and branding.
 - Line breaks in custom headers and footers are retained. If the combined company details take too much room on a page, Document settings highlights the field that needs shortening before issuing.
 - VAT registration, employees, partner types, accounting method and VAT reporting period start as **not confirmed**. Confirm the applicable profile with your accountant.
 - Saving customer records is blocked until storage/privacy and archive arrangements have been explicitly confirmed. For local testing, use synthetic data only. ICP replication is **not** proof that Swedish accounting storage or GDPR requirements are met.
@@ -84,7 +83,7 @@ Templates cover quotations, order confirmations, ÄTA/change orders, invoices (s
 1. Use **New document / Skapa dokument** in the page header to open the same overlay sidebar used by Projects and Slideshows. Empty fields have illustrative placeholders; these are not saved values. Expand **How documents work / Så fungerar dokument** for instructions and **Preview sample PDF / Förhandsvisa exempel-PDF**, which uses clearly labelled fictional data and saves nothing.
 2. Fill in the actual document, then preview/download a visibly marked draft PDF or **Save draft**, which closes the sidebar and updates the list. Invalid fields turn red, show a localised message and receive focus. Closing with unsaved document, payment or evidence changes asks for confirmation. PDF previews open above the editor without losing entered details.
 3. Issue the document. The backend validates and freezes its content, branding and totals, allocating an invoice number atomically. Repeated issue requests do not allocate another number.
-4. Finalise the PDF. If rendering/upload fails, the issued number remains allocated and **Retry pending PDF finalisation** resumes the workflow. Final PDF bytes and SHA-256 are retained; later settings/template/logo changes do not rewrite them.
+4. Preview, download or share the PDF. It is generated on demand in the browser from the document content and company branding frozen at issue time. Later settings changes do not change that issued document's PDF data.
 5. Download the PDF and export the archive record. Transfer both to the existing accounting service and record its receipt/reference. Exporting alone does not mark a document as archived. Verify the selected financial year end and retention date with the accountant.
 6. Optionally create a customer link. Links expire after 30 days, can be rotated/revoked, and disclose only that final customer PDF. Anyone holding the link can view it; revocation cannot recall downloaded copies. Internal notes, imports and tax worksheets are never shared. The token is passed in the URL fragment and removed from visible history.
 
@@ -92,7 +91,7 @@ Templates cover quotations, order confirmations, ÄTA/change orders, invoices (s
 
 **Saved documents / Sparade dokument** (previously “Document register”) uses the same collection rows as Projects and Slideshows. Click a title or edit/view icon to open the sidebar. Row icons offer PDF preview, download, sharing/payments, archive export and pending-PDF retry as applicable. Drafts can be deleted after confirmation; issued-document deletion is disabled. Search, document-type and status filters sit above the list and affect only the current page (up to 25 records); creation is a separate header action, not part of search.
 
-Draft data, issued records and final PDF chunks are stored persistently in the application's **backend canister**, behind admin authentication. Preview-only/sample PDFs are temporary browser blobs and do not enter the list. Downloads are saved by your browser to your chosen download location. The existing accounting service remains the statutory archive; this workspace is not that archive.
+Drafts, issued records and frozen issue-time branding are stored persistently in the application's **backend canister**. PDF bytes are generated on demand in the browser and are not stored in the canister; shared links use the same frozen customer-visible snapshot. Internal notes are excluded from shared-link data. Save each issued PDF in the existing accounting service, which remains the statutory archive; this workspace is not that archive.
 
 The PDF renderer and its embedded fonts load with the document workspace, rather than importing a deployment-specific PDF chunk when preview/download is clicked. This avoids late missing-chunk failures after a frontend deployment and does not reload or discard a draft. If an older page is already open during this update, save its draft and refresh Admin once.
 
