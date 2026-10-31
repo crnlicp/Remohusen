@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "typecheck": "tsc -b",
+    "bindgen": "icp-bindgen --did-file ../backend/backend.did --out-dir ./src/bindings --force",
+    "build": "npm run typecheck && vite build",
+    "typecheck": "npm run bindgen && tsc -b",
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
     "test:browser": "playwright test"
