@@ -9,8 +9,8 @@ A full-stack website for **Remohusen**, a Swedish construction company working o
 
 | Part | Technology |
 |------|------------|
-| Backend | Motoko canister (`backend/`), using enhanced orthogonal persistence |
-| Frontend | React 19, Vite, TypeScript, Tailwind CSS v4, Motion and Lucide icons (`frontend/`), served from an asset canister |
+| Backend | Motoko canister (`canisters/backend/`), using enhanced orthogonal persistence |
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS v4, Motion and Lucide icons (`canisters/frontend/`), served from an asset canister |
 | Tooling | [`icp` CLI](https://github.com/dfinity/icp-cli), [`mops`](https://mops.one), Node.js 22+ |
 
 ## Getting started
@@ -38,7 +38,7 @@ Then open:
 The dev server needs the backend canister to be deployed:
 
 ```bash
-cd frontend
+cd canisters/frontend
 npm install
 npm run dev
 ```
@@ -132,7 +132,7 @@ Primary sources: [Skatteverket: KB declarations](https://www.skatteverket.se/for
 **Validation**
 
 ```bash
-cd backend && mops check && mops test documents
+cd canisters/backend && mops check && mops test documents
 cd ../frontend && npm test && npm run build
 ```
 
@@ -180,7 +180,7 @@ You can edit these under **Admin → Site settings**:
 
 **Before deploying to mainnet:**
 
-- Set `SITE_URL` in `frontend/.env.production` to the real domain, for example `https://www.remohusen.se`.
+- Set `SITE_URL` in `canisters/frontend/.env.production` to the real domain, for example `https://www.remohusen.se`.
 - Set the same address under Site settings → Website address.
 
 **Caveats:**
@@ -203,20 +203,26 @@ You can edit these under **Admin → Site settings**:
 ## Project structure
 
 ```
-icp.yaml                  canisters + local network (port 8010)
-backend/
+icp.yaml                  canisters (canisters/*) + local network (port 8010)
+package.json              root commands (check, test, build, dev, deploy:local)
+canisters/backend/
+  mops.toml               toolchain, deps, migrations chain (check-limit = 1)
+  deployed/backend.most   stable-type baseline of the last local deploy (mops deployed)
   src/main.mo             actor; composes the mixins
   src/types.mo            shared types (L10n, ImageRef, Slide, NewsPost, ...)
   src/lib/                pure logic (Auth, Content, Images, Messages, Validate)
   src/mixins/             public API split by area
   src/migrations/         enhanced-persistence migrations
-  backend.did             generated Candid (frontend bindings are built from it)
-frontend/
+  src/backend.did         generated Candid (frontend bindings are built from it)
+  test/                   mops tests
+canisters/frontend/
   public/                 logo.svg, favicon.svg, _redirects (SPA fallback)
-  src/components/         public UI (Navbar, HeroSlideshow, SmartImage, ...)
-  src/pages/              Home, About, News, Contact, NotFound
-  src/admin/              admin panel (lazy-loaded)
-  src/lib/                API client, i18n, site context, image helpers
+  app/components/         public UI (Navbar, HeroSlideshow, SmartImage, ...)
+  app/pages/              Home, About, News, Contact, NotFound
+  app/admin/              admin panel (lazy-loaded)
+  app/lib/                API client, i18n, site context, image helpers
+  scripts/seo-plugin.ts   build-time sitemap.xml / robots.txt
+  tests/                  vitest unit + integration tests; tests/e2e/ Playwright
 ```
 
 ## Changing the backend interface
@@ -224,8 +230,8 @@ frontend/
 After changing any public method or type in the backend, regenerate the Candid file and redeploy:
 
 ```bash
-cd backend && mops generate candid backend && cd ..
+cd canisters/backend && mops generate candid backend && cd ../..
 icp deploy
 ```
 
-Stable state uses enhanced orthogonal persistence. If a change to a stable type is incompatible with the old one, add a migration under `backend/src/migrations/`.
+Stable state uses enhanced orthogonal persistence. If a change to a stable type is incompatible with the old one, add a migration under `canisters/backend/src/migrations/` (one pending file at a time, `check-limit = 1`).

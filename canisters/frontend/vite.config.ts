@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { icpBindgen } from "@icp-sdk/bindgen/plugins/vite";
 import { execSync } from "child_process";
-import { seoFiles } from "./seo-plugin.ts";
+import { seoFiles } from "./scripts/seo-plugin.ts";
 
 export default defineConfig(({ command, mode }) => {
   const environment = process.env.ICP_ENVIRONMENT || "local";
@@ -13,8 +13,8 @@ export default defineConfig(({ command, mode }) => {
     react(),
     tailwindcss(),
     icpBindgen({
-      didFile: "../backend/backend.did",
-      outDir: "./src/bindings",
+      didFile: "../backend/src/backend.did",
+      outDir: "./app/bindings",
     }),
     seoFiles(siteUrl, environment),
   ];

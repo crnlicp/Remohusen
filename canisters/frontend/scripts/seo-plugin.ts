@@ -28,7 +28,7 @@ const xmlEscape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").
 
 /**
  * Generates robots.txt and sitemap.xml at build time and replaces %SITE_URL% in index.html.
- * The public address comes from SITE_URL (see frontend/.env).
+ * The public address comes from SITE_URL (see .env.production).
  */
 export function seoFiles(siteUrl: string, environment: string): Plugin {
   const base = siteUrl.replace(/\/+$/, "");

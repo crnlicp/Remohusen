@@ -1,0 +1,11 @@
+{
+  "name": "remohusen",
+  "private": true,
+  "scripts": {
+    "check": "cd canisters/backend && mops check",
+    "test": "cd canisters/backend && mops test && cd ../.. && npm --prefix canisters/frontend test",
+    "build": "npm --prefix canisters/frontend run build",
+    "dev": "npm --prefix canisters/frontend run dev",
+    "deploy:local": "icp deploy -e local --identity ${ICP_IDENTITY:-anonymous}"
+  }
+}

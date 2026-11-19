@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { HttpAgent } from "@icp-sdk/core/agent";
-import { createActor } from "../src/bindings/backend";
+import { createActor } from "../app/bindings/backend";
 import { documentFixture, input, settings } from "./fixtures";
 
 type Result<T> = { __kind__: "ok"; ok: T } | { __kind__: "err"; err: string };

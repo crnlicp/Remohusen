@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { translateAdmin } from "../src/admin/language";
-import { sampleDocument } from "../src/lib/documents";
-import { validDocumentDate, validateDocument, validateDocumentSettings } from "../src/lib/documentValidation";
-import { LETTERHEAD_FIT_ERROR } from "../src/lib/documentLetterhead";
+import { translateAdmin } from "../app/admin/language";
+import { sampleDocument } from "../app/lib/documents";
+import { validDocumentDate, validateDocument, validateDocumentSettings } from "../app/lib/documentValidation";
+import { LETTERHEAD_FIT_ERROR } from "../app/lib/documentLetterhead";
 import { input, settings } from "./fixtures";
 
 describe("document form feedback", () => {

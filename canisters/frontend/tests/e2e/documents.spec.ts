@@ -2,8 +2,8 @@ import { test, expect, request, type BrowserContext } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { HttpAgent } from "@icp-sdk/core/agent";
-import { createActor } from "../src/bindings/backend";
-import { settings } from "../test/fixtures";
+import { createActor } from "../../app/bindings/backend";
+import { settings } from "../fixtures";
 
 const canisterId = process.env.DOCUMENT_BROWSER_CANISTER;
 test.skip(!canisterId, "Use a fresh isolated local canister with anonymous controller");

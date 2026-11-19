@@ -1,14 +1,14 @@
 import { expect, it, vi } from "vitest";
 import { readFile } from "node:fs/promises";
 import { documentFixture } from "./fixtures";
-import { lineAmounts } from "../src/lib/documents";
-import { LETTERHEAD_FIT_ERROR } from "../src/lib/documentLetterhead";
+import { lineAmounts } from "../app/lib/documents";
+import { LETTERHEAD_FIT_ERROR } from "../app/lib/documentLetterhead";
 
 vi.mock("@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff?inline", () => ({ default: `${process.cwd()}/node_modules/@fontsource/noto-sans/files/noto-sans-latin-400-normal.woff` }));
 vi.mock("@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff?inline", () => ({ default: `${process.cwd()}/node_modules/@fontsource/noto-sans/files/noto-sans-latin-700-normal.woff` }));
 
 it("renders branded multi-page PDFs with Swedish glyphs, repeated letterhead and no private notes", async () => {
-  const { renderDocumentPdf } = await import("../src/admin/documents/Pdf");
+  const { renderDocumentPdf } = await import("../app/admin/documents/Pdf");
   const lines = Array.from({ length: 60 }, (_, i) => ({ ...documentFixture.input.lines[0], description: `Rad-${i} Ångström, kök, vägg och fönster. ${"Long description ".repeat(5)}` }));
   const netOre = lines.reduce((sum, line) => sum + lineAmounts(line).net, 0n);
   const vatOre = lines.reduce((sum, line) => sum + lineAmounts(line).vat, 0n);
@@ -54,7 +54,7 @@ it("renders branded multi-page PDFs with Swedish glyphs, repeated letterhead and
 });
 
 it("uses the custom logo and English letterhead for letters and accounting preparation", async () => {
-  const { renderDocumentPdf, renderPreparationPdf } = await import("../src/admin/documents/Pdf");
+  const { renderDocumentPdf, renderPreparationPdf } = await import("../app/admin/documents/Pdf");
   const { getDocument, OPS } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const customLogo = `data:image/png;base64,${(await readFile("public/apple-touch-icon.png")).toString("base64")}`;
   const brand = { ...documentFixture.brand, logoData: customLogo };
@@ -82,7 +82,7 @@ it("uses the custom logo and English letterhead for letters and accounting prepa
 });
 
 it("preserves configured line breaks and explicitly rejects a letterhead that cannot fit", async () => {
-  const { renderDocumentPdf, renderPreparationPdf } = await import("../src/admin/documents/Pdf");
+  const { renderDocumentPdf, renderPreparationPdf } = await import("../app/admin/documents/Pdf");
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const brand = { ...documentFixture.brand, header: { sv: "Bygg och renovering\nStockholm", en: "" }, footer: { sv: "Tack för förtroendet\nVälkommen åter", en: "" } };
   const blob = await renderDocumentPdf({ ...documentFixture, brand });
@@ -100,7 +100,7 @@ it("preserves configured line breaks and explicitly rejects a letterhead that ca
 });
 
 it("repeats the letterhead throughout multi-page accounting preparation", async () => {
-  const { renderPreparationPdf } = await import("../src/admin/documents/Pdf");
+  const { renderPreparationPdf } = await import("../app/admin/documents/Pdf");
   const { getDocument, OPS } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const content = Array.from({ length: 140 }, (_, i) => `Preparation line ${i} Åäö`).join("\n");
   const blob = await renderPreparationPdf(documentFixture.brand, "VAT preparation", content, "en");
@@ -124,7 +124,7 @@ it("repeats the letterhead throughout multi-page accounting preparation", async 
 });
 
 it("keeps long company details and oversized line items inside the repeating letterhead", async () => {
-  const { renderDocumentPdf } = await import("../src/admin/documents/Pdf");
+  const { renderDocumentPdf } = await import("../app/admin/documents/Pdf");
   const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const brand = {
     ...documentFixture.brand,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateTotals, decimal, lineAmounts, money, retentionDate, scaled } from "../src/lib/documents";
+import { calculateTotals, decimal, lineAmounts, money, retentionDate, scaled } from "../app/lib/documents";
 import { input } from "./fixtures";
 
 describe("exact SEK calculations", () => {

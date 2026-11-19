@@ -6,10 +6,14 @@ args = [ "--default-persistent-actors", "-W", "M0236,M0237,M0223" ]
 
 [canisters.backend]
 main = "src/main.mo"
-candid = "backend.did"
+candid = "src/backend.did"
 
 [canisters.backend.migrations]
 chain = "src/migrations"
+check-limit = 1
+
+[canisters.backend.check-stable]
+path = "deployed/backend.most"
 
 [dependencies]
 core = "2.6.2"

@@ -1,0 +1,704 @@
+// Version: 4.0.0
+type AboutPage__276005068 =
+  {
+    heroImage : ?ImageRef__679807274;
+    heroText : L10n__90629731;
+    heroTitle : L10n__90629731;
+    stats : [AboutStat__1059396420];
+    storyImage : ?ImageRef__679807274;
+    storyText : L10n__90629731;
+    storyTitle : L10n__90629731;
+    team : [TeamMember__570667171];
+    values : [AboutValue__814636337]
+  };
+type AboutPage__479436549 =
+  {
+    heroImage : ?ImageRef__442183322;
+    heroText : L10n__113668860;
+    heroTitle : L10n__113668860;
+    stats : [AboutStat__625653860];
+    storyImage : ?ImageRef__442183322;
+    storyText : L10n__113668860;
+    storyTitle : L10n__113668860;
+    team : [TeamMember__367296059];
+    values : [AboutValue__589645149]
+  };
+type AboutStat__1059396420 = {caption : L10n__90629731; value : Text};
+type AboutStat__625653860 = {caption : L10n__113668860; value : Text};
+type AboutValue__589645149 =
+  {icon : Text; text : L10n__113668860; title : L10n__113668860};
+type AboutValue__814636337 =
+  {icon : Text; text : L10n__90629731; title : L10n__90629731};
+type AdminCredentials__505116352 =
+  {passwordHash : Blob; salt : Blob; username : Text};
+type AdminCredentials__559028756 =
+  {passwordHash : Blob; salt : Blob; username : Text};
+type AuthState__990841507 =
+  {
+    var admin : ?AdminCredentials__559028756;
+    var failedAttempts : Nat;
+    var lockedUntil : Int;
+    sessions : Map__230067015<Text, Session__446750334>;
+    var windowStart : Int
+  };
+type Brand__219362270 =
+  {
+    address : Text;
+    contact : Text;
+    fTax : Bool;
+    footer : L10n__1779736;
+    header : L10n__1779736;
+    legalName : Text;
+    logoData : Text;
+    orgNumber : Text;
+    paymentDetails : Text;
+    vatNumber : Text
+  };
+type Brand__277444810 =
+  {
+    address : Text;
+    contact : Text;
+    fTax : Bool;
+    footer : L10n__60576827;
+    header : L10n__60576827;
+    legalName : Text;
+    logoData : Text;
+    orgNumber : Text;
+    paymentDetails : Text;
+    vatNumber : Text
+  };
+type BusinessDocument__641996979 =
+  {
+    brand : DocumentBrand__633716823;
+    createdAt : Int;
+    events : [DocumentEvent__134881487];
+    evidence : DocumentEvidence__86250466;
+    id : Nat;
+    input : DocumentInput__763777813;
+    issuedAt : ?Int;
+    number : Text;
+    payments : [DocumentPayment__546951908];
+    pdfChunks : Nat;
+    pdfHash : Text;
+    pdfReady : Bool;
+    revision : Nat;
+    shareHash : ?Text;
+    sourceNumber : Text;
+    totals : DocumentTotals__600197710
+  };
+type ContactInfo__214366813 =
+  {
+    address : Text;
+    city : Text;
+    email : Text;
+    heroImage : ?ImageRef__442183322;
+    intro : L10n__113668860;
+    mapLat : Text;
+    mapLng : Text;
+    openingHours : L10n__113668860;
+    phone : Text;
+    postalCode : Text;
+    title : L10n__113668860
+  };
+type ContactInfo__444853416 =
+  {
+    address : Text;
+    city : Text;
+    email : Text;
+    heroImage : ?ImageRef__679807274;
+    intro : L10n__90629731;
+    mapLat : Text;
+    mapLng : Text;
+    openingHours : L10n__90629731;
+    phone : Text;
+    postalCode : Text;
+    title : L10n__90629731
+  };
+type ContentState__260413731 =
+  {
+    var about : AboutPage__276005068;
+    var contact : ContactInfo__444853416;
+    news : Map__230067015<Nat, NewsPost__421447241>;
+    var nextId : Nat;
+    projects : Map__230067015<Nat, Project__101334394>;
+    services : Map__230067015<Nat, Service__538745755>;
+    var settings : Settings__306527750;
+    slides : Map__230067015<Nat, Slide__288376464>;
+    testimonials : Map__230067015<Nat, Testimonial__605593764>
+  };
+type Data__44217153<K, V> = {var count : Nat__227979830; kvs : [var ?(K, V)]};
+type DocumentBrand__633716823 =
+  {
+    address : Text;
+    contact : Text;
+    fTax : Bool;
+    footer : L10n__113668860;
+    header : L10n__113668860;
+    legalName : Text;
+    logoData : Text;
+    orgNumber : Text;
+    paymentDetails : Text;
+    vatNumber : Text
+  };
+type DocumentEvent__134881487 = {action : Text; at : Int; detail : Text};
+type DocumentEvidence__86250466 =
+  {
+    acceptanceReference : Text;
+    archiveReference : Text;
+    einvoiceReference : Text
+  };
+type DocumentFile__995009376 = {chunks : [Blob]; size : Nat};
+type DocumentInput__763777813 =
+  {
+    customerAddress : Text;
+    customerName : Text;
+    customerType : Text;
+    customerVat : Text;
+    dueDate : Text;
+    internalNotes : Text;
+    issueDate : Text;
+    kind : Text;
+    language : Text;
+    lines : [DocumentLine__178119088];
+    notes : Text;
+    project : Text;
+    reverseChargeConfirmed : Bool;
+    rotConfirmed : Bool;
+    rotOre : Nat;
+    sourceId : ?Nat;
+    supplyDate : Text;
+    terms : Text;
+    title : Text
+  };
+type DocumentLine__178119088 =
+  {
+    category : Text;
+    description : Text;
+    discountBps : Nat;
+    exemptionReason : Text;
+    quantityMilli : Nat;
+    treatment : Text;
+    unitOre : Nat;
+    vatBps : Nat
+  };
+type DocumentPayment__546951908 =
+  {amountOre : Nat; date : Text; reference : Text};
+type DocumentSettings__146208844 =
+  {
+    accountingMethod : Text;
+    archiveService : Text;
+    brand : DocumentBrand__633716823;
+    employees : Text;
+    financialYearEnd : Text;
+    invoicePrefix : Text;
+    partnerType : Text;
+    paymentDays : Nat;
+    privacyApproved : Bool;
+    vatPeriod : Text;
+    vatRegistered : Text
+  };
+type DocumentShare__465907374 = {documentId : Nat; expiresAt : Int};
+type DocumentTotals__600197710 =
+  {grossOre : Nat; netOre : Nat; payableOre : Nat; vatOre : Nat};
+type Document__37065494 =
+  {
+    brand : Brand__277444810;
+    createdAt : Int;
+    events : [{action : Text; at : Int; detail : Text}];
+    evidence :
+      {
+        acceptanceReference : Text;
+        archiveReference : Text;
+        einvoiceReference : Text
+      };
+    id : Nat;
+    input : Input__73885854;
+    issuedAt : ?Int;
+    number : Text;
+    payments : [{amountOre : Nat; date : Text; reference : Text}];
+    pdfChunks : Nat;
+    pdfHash : Text;
+    pdfReady : Bool;
+    revision : Nat;
+    shareHash : ?Text;
+    sourceNumber : Text;
+    totals : {grossOre : Nat; netOre : Nat; payableOre : Nat; vatOre : Nat}
+  };
+type Document__907631903 =
+  {
+    brand : Brand__219362270;
+    createdAt : Int;
+    events : [Event__793062214];
+    evidence : Evidence__390652039;
+    id : Nat;
+    input : Input__446211684;
+    issuedAt : ?Int;
+    number : Text;
+    payments : [Payment__589008428];
+    pdfChunks : Nat;
+    pdfHash : Text;
+    pdfReady : Bool;
+    revision : Nat;
+    shareHash : ?Text;
+    sourceNumber : Text;
+    totals : Totals__741878964
+  };
+type Event__793062214 = {action : Text; at : Int; detail : Text};
+type Evidence__390652039 =
+  {
+    acceptanceReference : Text;
+    archiveReference : Text;
+    einvoiceReference : Text
+  };
+type ImageRef__442183322 = {#stored : Nat; #url : Text};
+type ImageRef__679807274 = {#stored : Nat; #url : Text};
+type ImageState__653939935 =
+  {
+    images : Map__230067015<Nat, StoredImage__115547300>;
+    var nextId : Nat;
+    uploads : Map__230067015<Nat, PendingUpload__201330694>
+  };
+type Input__446211684 =
+  {
+    customerAddress : Text;
+    customerName : Text;
+    customerType : Text;
+    customerVat : Text;
+    dueDate : Text;
+    internalNotes : Text;
+    issueDate : Text;
+    kind : Text;
+    language : Text;
+    lines : [Line__989907654];
+    notes : Text;
+    project : Text;
+    reverseChargeConfirmed : Bool;
+    rotConfirmed : Bool;
+    rotOre : Nat;
+    sourceId : ?Nat;
+    supplyDate : Text;
+    terms : Text;
+    title : Text
+  };
+type Input__73885854 =
+  {
+    customerAddress : Text;
+    customerName : Text;
+    customerType : Text;
+    customerVat : Text;
+    dueDate : Text;
+    internalNotes : Text;
+    issueDate : Text;
+    kind : Text;
+    language : Text;
+    lines : [Line__428917381];
+    notes : Text;
+    project : Text;
+    reverseChargeConfirmed : Bool;
+    rotConfirmed : Bool;
+    rotOre : Nat;
+    sourceId : ?Nat;
+    supplyDate : Text;
+    terms : Text;
+    title : Text
+  };
+type Internal__283199666<K, V> =
+  {children : [var ?Node__204828119<K, V>]; data : Data__44217153<K, V>};
+type L10n__113668860 = {en : Text; sv : Text};
+type L10n__1779736 = {en : Text; sv : Text};
+type L10n__523793033 = {en : Text; sv : Text};
+type L10n__60576827 = {en : Text; sv : Text};
+type L10n__90629731 = {en : Text; sv : Text};
+type Leaf__598469445<K, V> = {data : Data__44217153<K, V>};
+type Line__428917381 =
+  {
+    category : Text;
+    description : Text;
+    discountBps : Nat;
+    exemptionReason : Text;
+    quantityMilli : Nat;
+    treatment : Text;
+    unitOre : Nat;
+    vatBps : Nat
+  };
+type Line__989907654 =
+  {
+    category : Text;
+    description : Text;
+    discountBps : Nat;
+    exemptionReason : Text;
+    quantityMilli : Nat;
+    treatment : Text;
+    unitOre : Nat;
+    vatBps : Nat
+  };
+type List__355132335<T> =
+  {
+    var blockIndex : Nat__227979830;
+    var blocks : [var [var ?T]];
+    var elementIndex : Nat__227979830
+  };
+type List__836382695<T> = List__355132335<T>;
+type Map__230067015<K, V> = Map__405889023<K, V>;
+type Map__405889023<K, V> = Map__603270868<K, V>;
+type Map__603270868<K, V> =
+  {var root : Node__204828119<K, V>; var size : Nat__227979830};
+type MessageState__493238996 =
+  {
+    messages : Map__230067015<Nat, Message__558031260>;
+    var nextId : Nat;
+    var windowCount : Nat;
+    var windowStart : Int
+  };
+type Message__136060508 =
+  {
+    body : Text;
+    createdAt : Int;
+    email : Text;
+    id : Nat;
+    name : Text;
+    phone : Text;
+    read : Bool;
+    subject : Text
+  };
+type Message__558031260 =
+  {
+    body : Text;
+    createdAt : Int;
+    email : Text;
+    id : Nat;
+    name : Text;
+    phone : Text;
+    read : Bool;
+    subject : Text
+  };
+type Nat__227979830 = Nat__920180692;
+type Nat__920180692 = Nat;
+type NewActor__1024615105 =
+  {
+    auth : AuthState__990841507;
+    content : ContentState__260413731;
+    imageState : ImageState__653939935;
+    messageState : MessageState__493238996
+  };
+type NewActor__12924530 = {documentState : State__675642063};
+type NewActor__276926536 = {seoState : {var seo : SeoSettings__1011554383}};
+type NewsPost__421447241 =
+  {
+    body : L10n__90629731;
+    cover : ?ImageRef__679807274;
+    createdAt : Int;
+    excerpt : L10n__90629731;
+    id : Nat;
+    published : Bool;
+    publishedAt : Int;
+    title : L10n__90629731;
+    updatedAt : Int
+  };
+type NewsPost__839747591 =
+  {
+    body : L10n__113668860;
+    cover : ?ImageRef__442183322;
+    createdAt : Int;
+    excerpt : L10n__113668860;
+    id : Nat;
+    published : Bool;
+    publishedAt : Int;
+    title : L10n__113668860;
+    updatedAt : Int
+  };
+type Node__204828119<K, V> =
+  {#internal : Internal__283199666<K, V>; #leaf : Leaf__598469445<K, V>};
+type OldActor__389958636 = {};
+type OldActor__429333394 = {documentState : State__675642063};
+type OldActor__777568273 = {};
+type PageMeta__769601365 =
+  {description : L10n__523793033; title : L10n__523793033};
+type PageMeta__791938218 =
+  {description : L10n__113668860; title : L10n__113668860};
+type Payment__589008428 = {amountOre : Nat; date : Text; reference : Text};
+type PendingUpload__201330694 =
+  {
+    chunks : List__836382695<Blob>;
+    mime : Text;
+    name : Text;
+    var received : Nat;
+    size : Nat;
+    startedAt : Int
+  };
+type PendingUpload__21992990 =
+  {
+    chunks : List__836382695<Blob>;
+    mime : Text;
+    name : Text;
+    var received : Nat;
+    size : Nat;
+    startedAt : Int
+  };
+type Project__101334394 =
+  {
+    category : L10n__90629731;
+    description : L10n__90629731;
+    featured : Bool;
+    id : Nat;
+    images : [ImageRef__679807274];
+    location : Text;
+    order : Nat;
+    title : L10n__90629731;
+    year : Text
+  };
+type Project__670088084 =
+  {
+    category : L10n__113668860;
+    description : L10n__113668860;
+    featured : Bool;
+    id : Nat;
+    images : [ImageRef__442183322];
+    location : Text;
+    order : Nat;
+    title : L10n__113668860;
+    year : Text
+  };
+type SeoSettings__1011554383 =
+  {
+    about : PageMeta__769601365;
+    allowIndexing : Bool;
+    areaServed : Text;
+    bingVerification : Text;
+    businessType : Text;
+    contact : PageMeta__769601365;
+    googleVerification : Text;
+    home : PageMeta__769601365;
+    keywords : L10n__523793033;
+    news : PageMeta__769601365;
+    ogImage : Text;
+    priceRange : Text;
+    siteUrl : Text
+  };
+type SeoSettings__184274619 =
+  {
+    about : PageMeta__791938218;
+    allowIndexing : Bool;
+    areaServed : Text;
+    bingVerification : Text;
+    businessType : Text;
+    contact : PageMeta__791938218;
+    googleVerification : Text;
+    home : PageMeta__791938218;
+    keywords : L10n__113668860;
+    news : PageMeta__791938218;
+    ogImage : Text;
+    priceRange : Text;
+    siteUrl : Text
+  };
+type Service__217472471 =
+  {
+    active : Bool;
+    description : L10n__113668860;
+    icon : Text;
+    id : Nat;
+    image : ?ImageRef__442183322;
+    order : Nat;
+    title : L10n__113668860
+  };
+type Service__538745755 =
+  {
+    active : Bool;
+    description : L10n__90629731;
+    icon : Text;
+    id : Nat;
+    image : ?ImageRef__679807274;
+    order : Nat;
+    title : L10n__90629731
+  };
+type Session__446750334 = {expiresAt : Int; username : Text};
+type Session__542534195 = {expiresAt : Int; username : Text};
+type Settings__306527750 =
+  {
+    companyName : Text;
+    footerText : L10n__90629731;
+    orgNumber : Text;
+    rotNotice : L10n__90629731;
+    socials : SocialLinks__1009197158;
+    tagline : L10n__90629731
+  };
+type Settings__634063632 =
+  {
+    companyName : Text;
+    footerText : L10n__113668860;
+    orgNumber : Text;
+    rotNotice : L10n__113668860;
+    socials : SocialLinks__169346136;
+    tagline : L10n__113668860
+  };
+type Settings__810972528 =
+  {
+    accountingMethod : Text;
+    archiveService : Text;
+    brand : Brand__277444810;
+    employees : Text;
+    financialYearEnd : Text;
+    invoicePrefix : Text;
+    partnerType : Text;
+    paymentDays : Nat;
+    privacyApproved : Bool;
+    vatPeriod : Text;
+    vatRegistered : Text
+  };
+type Settings__90018882 =
+  {
+    accountingMethod : Text;
+    archiveService : Text;
+    brand : Brand__219362270;
+    employees : Text;
+    financialYearEnd : Text;
+    invoicePrefix : Text;
+    partnerType : Text;
+    paymentDays : Nat;
+    privacyApproved : Bool;
+    vatPeriod : Text;
+    vatRegistered : Text
+  };
+type Share__884160780 = {documentId : Nat; expiresAt : Int};
+type Slide__1007770233 =
+  {
+    active : Bool;
+    ctaLink : Text;
+    ctaText : L10n__113668860;
+    id : Nat;
+    image : ImageRef__442183322;
+    order : Nat;
+    subtitle : L10n__113668860;
+    title : L10n__113668860
+  };
+type Slide__288376464 =
+  {
+    active : Bool;
+    ctaLink : Text;
+    ctaText : L10n__90629731;
+    id : Nat;
+    image : ImageRef__679807274;
+    order : Nat;
+    subtitle : L10n__90629731;
+    title : L10n__90629731
+  };
+type SocialLinks__1009197158 =
+  {facebook : Text; instagram : Text; linkedin : Text};
+type SocialLinks__169346136 =
+  {facebook : Text; instagram : Text; linkedin : Text};
+type State__178479957 =
+  {
+    files : Map__230067015<Nat, {chunks : [Blob]; size : Nat}>;
+    var nextId : Nat;
+    var nextNumber : Nat;
+    records : Map__230067015<Nat, Document__37065494>;
+    var settings : ?Settings__810972528;
+    shares : Map__230067015<Text, {documentId : Nat; expiresAt : Int}>
+  };
+type State__675642063 =
+  {
+    files : Map__230067015<Nat, StoredPdf__879799706>;
+    var nextId : Nat;
+    var nextNumber : Nat;
+    records : Map__230067015<Nat, Document__907631903>;
+    var settings : ?Settings__90018882;
+    shares : Map__230067015<Text, Share__884160780>
+  };
+type StoredImage__115547300 =
+  {
+    chunks : [Blob];
+    createdAt : Int;
+    id : Nat;
+    mime : Text;
+    name : Text;
+    size : Nat
+  };
+type StoredImage__272824161 =
+  {
+    chunks : [Blob];
+    createdAt : Int;
+    id : Nat;
+    mime : Text;
+    name : Text;
+    size : Nat
+  };
+type StoredPdf__879799706 = {chunks : [Blob]; size : Nat};
+type TeamMember__367296059 =
+  {name : Text; photo : ?ImageRef__442183322; role : L10n__113668860};
+type TeamMember__570667171 =
+  {name : Text; photo : ?ImageRef__679807274; role : L10n__90629731};
+type Testimonial__348947069 =
+  {
+    active : Bool;
+    avatar : ?ImageRef__442183322;
+    id : Nat;
+    name : Text;
+    order : Nat;
+    quote : L10n__113668860;
+    rating : Nat;
+    role : L10n__113668860
+  };
+type Testimonial__605593764 =
+  {
+    active : Bool;
+    avatar : ?ImageRef__679807274;
+    id : Nat;
+    name : Text;
+    order : Nat;
+    quote : L10n__90629731;
+    rating : Nat;
+    role : L10n__90629731
+  };
+type Totals__741878964 =
+  {grossOre : Nat; netOre : Nat; payableOre : Nat; vatOre : Nat};
+{
+  "20261027_160000" : OldActor__777568273 -> NewActor__1024615105;
+  "20261027_161800" : OldActor__389958636 -> NewActor__276926536;
+  "20261030_140000" : {} -> {documentState : State__178479957};
+  "20261031_102500" : (old : OldActor__429333394) -> NewActor__12924530
+}
+actor  {
+  stable auth :
+    {
+      var admin : ?AdminCredentials__505116352;
+      var failedAttempts : Nat;
+      var lockedUntil : Int;
+      sessions : Map__230067015<Text, Session__542534195>;
+      var windowStart : Int
+    };
+  stable content :
+    {
+      var about : AboutPage__479436549;
+      var contact : ContactInfo__214366813;
+      news : Map__230067015<Nat, NewsPost__839747591>;
+      var nextId : Nat;
+      projects : Map__230067015<Nat, Project__670088084>;
+      services : Map__230067015<Nat, Service__217472471>;
+      var settings : Settings__634063632;
+      slides : Map__230067015<Nat, Slide__1007770233>;
+      testimonials : Map__230067015<Nat, Testimonial__348947069>
+    };
+  stable documentState :
+    {
+      files : Map__230067015<Nat, DocumentFile__995009376>;
+      var nextId : Nat;
+      var nextNumber : Nat;
+      records : Map__230067015<Nat, BusinessDocument__641996979>;
+      var settings : ?DocumentSettings__146208844;
+      shares : Map__230067015<Text, DocumentShare__465907374>
+    };
+  stable imageState :
+    {
+      images : Map__230067015<Nat, StoredImage__272824161>;
+      var nextId : Nat;
+      uploads : Map__230067015<Nat, PendingUpload__21992990>
+    };
+  stable messageState :
+    {
+      messages : Map__230067015<Nat, Message__136060508>;
+      var nextId : Nat;
+      var windowCount : Nat;
+      var windowStart : Int
+    };
+  stable seoState : {var seo : SeoSettings__184274619}
+};

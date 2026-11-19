@@ -1,5 +1,5 @@
-import type { BusinessDocument, DocumentInput, DocumentSettings } from "../src/bindings/backend";
-import { newInput } from "../src/lib/documents";
+import type { BusinessDocument, DocumentInput, DocumentSettings } from "../app/bindings/backend";
+import { newInput } from "../app/lib/documents";
 
 export const settings: DocumentSettings = {
   brand: { legalName: "Test Åäö Kommanditbolag", orgNumber: "556000-0000", address: "Testgatan 1, 12345 Stockholm", contact: "example@example.invalid",

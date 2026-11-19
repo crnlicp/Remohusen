@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { importAccounting, parseCsv, preparationText, sampleCsv } from "../src/lib/accountingPreparation";
+import { importAccounting, parseCsv, preparationText, sampleCsv } from "../app/lib/accountingPreparation";
 
 const load = (text = sampleCsv) => importAccounting(text, "556000-0000", "2026-12-31");
 describe("private accountant preparation", () => {
