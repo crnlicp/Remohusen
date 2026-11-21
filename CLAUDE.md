@@ -30,7 +30,7 @@ Local URL: http://frontend.local.localhost:8010/ (admin at `/admin`).
 - The admin account is created by a controller with
   `icp canister call backend bootstrapAdmin '("admin", "<password>")'`; reset with
   `resetAdminCredentials`. The frontend shows this command, so keep the method names stable.
-- `SITE_URL` in `canisters/frontend/.env.production` is still the local URL; set the real
-  domain before any mainnet deploy.
+- Production domain is `remohusen.se`: `SITE_URL` in `canisters/frontend/.env.production`
+  and `canisters/frontend/public/.well-known/ic-domains` must stay in sync.
 - No mainnet canister IDs exist yet (`.icp/data` is empty).
 - User-facing copy is Swedish first, English second (`L10n = { sv; en }`).
